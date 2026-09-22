@@ -1,0 +1,86 @@
+//@version=5
+// ============================================================================
+//  AEOX Quant — Lighthouse v1 (Premium Suite)
+//  1H short-term swing scanner: buy sharp pullbacks (RSI(4) < 10) while price
+//  holds above the SMA100 trend guard; exit when momentum normalizes (RSI(4) > 70).
+//
+//  Parity: default settings generate the same BUY/SELL events as
+//  https://quant.aeox.uk (same math, same thresholds). Markers are
+//  position-aware: they show actual entries/exits (first signal wins,
+//  redundant crossings are not plotted) — matching the dashboard arrows.
+//  Premium: ATR-adaptive stop lines (QS Risk), optional take-profit,
+//  optional volume confirmation, full alert set.
+//
+//  LICENSE: personal use, one TradingView account. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX Lighthouse v1", overlay=true, max_labels_count=500)
+
+grpSig   = "Signal (matches the web dashboard)"
+rsiLen   = input.int(4, "RSI length", minval=1, group=grpSig)
+coreTh   = input.float(10.0, "Entry: RSI below", minval=1, maxval=50, group=grpSig)
+exitTh   = input.float(70.0, "Exit: RSI above", minval=50, maxval=99, group=grpSig)
+guardLen = input.int(100, "Trend guard SMA", minval=10, group=grpSig)
+
+grpRisk  = "Risk engineering (premium)"
+useAtr   = input.bool(true, "ATR-adaptive stop (2×ATR, clamped 2–12%)", group=grpRisk)
+atrLen   = input.int(14, "ATR length", minval=1, group=grpRisk)
+atrMult  = input.float(2.0, "ATR multiplier", minval=0.5, step=0.25, group=grpRisk)
+fixStop  = input.float(5.0, "Fixed stop % (when ATR stop off)", minval=0, maxval=50, step=0.5, group=grpRisk)
+useTp    = input.bool(false, "Take-profit (caps the winner — off = let it run)", group=grpRisk)
+tpPct    = input.float(3.0, "Take-profit %", minval=0.5, step=0.5, group=grpRisk)
+
+grpConf  = "Volume confirmation (premium, default off = dashboard parity)"
+useVol   = input.bool(false, "Require above-average volume on entry", group=grpConf)
+volLen   = input.int(20, "Volume average length", minval=2, group=grpConf)
+volMult  = input.float(1.2, "Volume must be ≥ average ×", minval=1.0, step=0.1, group=grpConf)
+
+r4   = ta.rsi(close, rsiLen)
+s100 = ta.sma(close, guardLen)
+
+inZone  = not na(r4) and not na(s100) and r4 < coreTh and close > s100
+outZone = not na(r4) and r4 > exitTh
+warm    = not na(r4) and not na(s100) and not na(r4[1]) and not na(s100[1])
+
+volOk   = not useVol or volume >= ta.sma(volume, volLen) * volMult
+buySig  = warm and inZone and not inZone[1] and volOk
+sellSig = warm and outZone and not outZone[1]
+
+// ---- position state: engine-matched events (first signal wins, redundant skipped) ----
+atrPct  = math.max(2.0, math.min(12.0, ta.sma(ta.tr(true), atrLen) * atrMult / close * 100))
+stopPct = useAtr ? atrPct : fixStop
+
+var float stopPx = na
+var float tpPx   = na
+var int   dir    = 0
+
+// exits are evaluated BEFORE entries: a fresh entry's stop is checked from the
+// NEXT bar (same-bar low is already in the past at entry), and a stop-out can
+// re-enter at the same bar's close — both match the web engine (method rules)
+stopHit = dir == 1 and not na(stopPx) and low <= stopPx
+tpHit   = dir == 1 and useTp and not na(tpPx) and high >= tpPx and not stopHit
+exitSig = sellSig and dir == 1
+
+if stopHit or tpHit or exitSig
+    dir := 0
+
+entrySig = buySig and dir == 0
+if entrySig
+    stopPx := close * (1 - stopPct / 100)
+    tpPx   := useTp ? close * (1 + tpPct / 100) : na
+    dir    := 1
+
+// ---- plots ----
+plot(s100, "SMA100 trend guard", color=color.new(color.teal, 40), linewidth=2)
+plotshape(entrySig, "BUY", shape.triangleup, location.belowbar, color.new(color.green, 0), size=size.tiny, text="BUY", textcolor=color.green)
+plotshape(exitSig, "SELL", shape.triangledown, location.abovebar, color.new(color.red, 0), size=size.tiny, text="SELL", textcolor=color.red)
+plotshape(stopHit, "STOP", shape.xcross, location.abovebar, color.new(color.red, 0), size=size.tiny, text="STOP", textcolor=color.red)
+plotshape(tpHit, "TP", shape.xcross, location.abovebar, color.new(color.green, 0), size=size.tiny, text="TP", textcolor=color.green)
+plot(dir == 1 ? stopPx : na, "Stop level", color=color.new(color.red, 30), style=plot.style_linebr)
+plot(dir == 1 ? tpPx : na, "TP level", color=color.new(color.green, 30), style=plot.style_linebr)
+
+// ---- alerts ----
+alertcondition(entrySig, "Lighthouse BUY", "AEOX Lighthouse: BUY {{ticker}} {{interval}} @ {{close}}")
+alertcondition(exitSig, "Lighthouse SELL", "AEOX Lighthouse: SELL {{ticker}} {{interval}} @ {{close}}")
+alertcondition(stopHit, "Lighthouse STOP", "AEOX Lighthouse: STOP hit on {{ticker}} {{interval}}")
+alertcondition(tpHit, "Lighthouse TP", "AEOX Lighthouse: take-profit hit on {{ticker}} {{interval}}")

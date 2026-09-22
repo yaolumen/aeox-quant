@@ -1,0 +1,2092 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="mint">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AEOX Quant — Crypto Indicator Dashboard: Lighthouse &amp; QS Confluence + RSI, MACD, Bollinger, EMA with Stop-Loss Backtests</title>
+<meta name="description" content="Free live crypto indicator dashboard: Lighthouse (1H pullback scanner) and QS Confluence (multi-factor house score) plus RSI, MACD, Bollinger &amp; EMA cross on BTC, ETH, SOL, BNB &amp; XRP. Honest backtests with stop-loss and fees. View-source verifiable.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://quant.aeox.uk/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="AEOX Quant">
+  <meta property="og:title" content="AEOX Quant — Lighthouse &amp; QS Confluence: Crypto Indicator Dashboard with Honest Backtests">
+<meta property="og:description" content="Lighthouse (1H pullback scanner) + QS Confluence (multi-factor house indicator) + classics on top crypto charts. Backtests include stop-loss and 0.1% fees.">
+<meta property="og:url" content="https://quant.aeox.uk/">
+<meta property="og:image" content="https://quant.aeox.uk/og-cover.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AEOX Quant — Lighthouse &amp; QS Confluence Crypto Indicator Dashboard">
+<meta name="twitter:description" content="Lighthouse &amp; QS Confluence house indicators + classics, with honest stop-loss backtests on top crypto charts.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
+<script>try { document.documentElement.setAttribute('data-theme', localStorage.getItem('qs-theme') || 'mint'); if (localStorage.getItem('qs-lang') === 'zh') document.documentElement.lang = 'zh-CN'; } catch (e) {}</script>
+<script src="https://unpkg.com/lightweight-charts@4.2.0/dist/lightweight-charts.standalone.production.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "AEOX Quant",
+  "alternateName": "QuantSignal Lab",
+  "url": "https://quant.aeox.uk/",
+  "publisher": { "@type": "Organization", "name": "AEOX", "url": "https://aeox.uk/" },
+  "description": "Free transparent crypto indicator dashboard: Lighthouse, a 1H-optimized pullback scanner, plus QS Confluence, a multi-factor house indicator, with stop-loss and fee-aware backtests."
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is this financial advice?",
+      "acceptedAnswer": { "@type": "Answer", "text": "No. This is an educational and technical demonstration of indicator computation. Nothing on this page is investment advice, and past signal performance does not guarantee future results." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is QS Confluence?",
+      "acceptedAnswer": { "@type": "Answer", "text": "QS Confluence is our house multi-factor indicator: a 0-100 score blending RSI momentum (35%), Bollinger position (25%), EMA trend spread (15%) and funding-rate sentiment (25%, contrarian). A premium version with adjustable weights and extra factors is planned for the all-in-one AEOX Quant suite — this site is currently a public research showcase and the paid suite opens later." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is Lighthouse?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Lighthouse is our 1H-optimized short-term swing scanner: it buys sharp pullbacks (RSI(4) below 10) only while price holds above its SMA100 trend guard, and exits when momentum normalizes (RSI(4) above 70). It was validated with out-of-sample grid testing across 5 coins." }
+    },
+    {
+      "@type": "Question",
+      "name": "Do the backtests include fees and stop-loss?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. Every backtest on this page models 0.1% trading fees per side and a configurable intrabar stop-loss (3%, 5%, 8% or off). We believe results without fees and risk controls are meaningless." }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I verify the indicator calculations?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Yes. All indicator calculations, signal detection, and backtest logic run in JavaScript in your browser. Open the page source and verify every line yourself." }
+    }
+  ]
+}
+</script>
+<style>
+  :root, [data-theme="mint"] {
+    --bg: #f3f8f1;
+    --panel: #ffffff;
+    --border: #dcead9;
+    --text: #35483d;
+    --muted: #7d9184;
+    --accent: #3a9d6f;
+    --accent-2: #f2994a;
+    --up: #3a9d6f;
+    --down: #e5767c;
+    --on-primary: #ffffff;
+    --kofi: #ff5f5f;
+    --header-bg: rgba(255, 255, 255, 0.85);
+    --shadow: 0 4px 16px rgba(58, 157, 111, 0.10);
+    --code-bg: #eaf3ec;
+    --hover: rgba(58, 157, 111, 0.05);
+  }
+  [data-theme="sky"] {
+    --bg: #f2f7fd;
+    --panel: #ffffff;
+    --border: #d9e6f5;
+    --text: #2f3e51;
+    --muted: #7e93ad;
+    --accent: #4a90d9;
+    --accent-2: #7c5cbf;
+    --up: #47ab7e;
+    --down: #ef7b7b;
+    --on-primary: #ffffff;
+    --header-bg: rgba(255, 255, 255, 0.85);
+    --shadow: 0 4px 16px rgba(74, 144, 217, 0.10);
+    --code-bg: #e9f1fb;
+    --hover: rgba(74, 144, 217, 0.05);
+  }
+  [data-theme="peach"] {
+    --bg: #fdf5ee;
+    --panel: #ffffff;
+    --border: #f0e0d0;
+    --text: #4a3c32;
+    --muted: #a08b7c;
+    --accent: #e8735a;
+    --accent-2: #5a9e8f;
+    --up: #4aa391;
+    --down: #e8735a;
+    --on-primary: #ffffff;
+    --header-bg: rgba(255, 255, 255, 0.85);
+    --shadow: 0 4px 16px rgba(232, 115, 90, 0.10);
+    --code-bg: #f9ede3;
+    --hover: rgba(232, 115, 90, 0.05);
+  }
+  [data-theme="night"] {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #c9d1d9;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-2: #f0883e;
+    --up: #3fb950;
+    --down: #f85149;
+    --on-primary: #0d1117;
+    --kofi: #ff5f5f;
+    --header-bg: rgba(13, 17, 23, 0.92);
+    --shadow: none;
+    --code-bg: #21262d;
+    --hover: rgba(88, 166, 255, 0.06);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+  }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  header {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+  }
+  .nav {
+    max-width: 1080px; margin: 0 auto; padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  }
+  .nav-left { display: flex; align-items: center; gap: 18px; }
+  .brand { font-weight: 700; font-size: 18px; color: var(--text); }
+  .brand span { color: var(--accent); }
+  .eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 2px; color: var(--accent); font-weight: 700; margin: 10px 0 6px; }
+  .lang-btn { margin-left: 10px; padding: 3px 10px; font-size: 12px; border: 1px solid var(--border); border-radius: 999px; background: transparent; color: var(--muted); cursor: pointer; }
+  .lang-btn:hover { color: var(--text); border-color: var(--accent); }
+  .theme-picker { display: flex; align-items: center; gap: 8px; }
+  .t-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: var(--c); border: 2px solid transparent;
+    cursor: pointer; padding: 0;
+  }
+  .t-dot.active { border-color: var(--text); }
+  .nav ul { display: flex; gap: 22px; list-style: none; }
+  .nav a { color: var(--muted); font-size: 14px; }
+  .nav a:hover { color: var(--text); }
+  main { max-width: 1080px; margin: 0 auto; padding: 0 20px; }
+  section { padding: 48px 0; }
+  h1 { font-size: 32px; line-height: 1.25; margin-bottom: 10px; }
+  h2 { font-size: 24px; margin-bottom: 14px; }
+  h3 { font-size: 17px; margin-bottom: 8px; }
+  p { margin-bottom: 12px; color: var(--text); }
+  .subtitle { color: var(--muted); font-size: 16px; max-width: 780px; }
+  .badge {
+    display: inline-block; font-size: 12px; padding: 3px 10px;
+    border: 1px solid var(--border); border-radius: 999px; color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 16px; align-items: center; position: sticky; top: 10px; z-index: 60; background: var(--bg); padding: 10px 12px; border-radius: 14px; box-shadow: 0 4px 18px rgba(0,0,0,.18); border: 1px solid var(--border); }
+  .loadbar { position: relative; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; margin: -8px 0 10px; opacity: 0; }
+  #dashboard.is-loading .loadbar { opacity: 1; }
+  .loadbar::before { content: ''; position: absolute; left: -40%; top: 0; bottom: 0; width: 40%; background: var(--accent); animation: loadslide 1s infinite linear; }
+  @keyframes loadslide { to { left: 100%; } }
+  #dashboard .chart-wrap { transition: opacity .25s; }
+  #dashboard.is-loading .chart-wrap { opacity: .45; pointer-events: none; }
+  .eq-caption { font-size: 12.5px; color: var(--muted); margin: 14px 0 0; }
+  .compare-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-top: 14px; }
+  .compare-cell { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 10px 12px 8px; cursor: pointer; box-shadow: var(--shadow); position: relative; transition: transform .15s, border-color .15s; }
+  .compare-cell:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .compare-cell::after { content: '↗'; position: absolute; top: 8px; right: 11px; color: var(--muted); font-size: 14px; font-style: normal; }
+  .compare-cell:hover::after { color: var(--accent); }
+  .compare-cell h4 { font-size: 14px; margin: 0 0 2px; color: var(--text); }
+  .compare-cell h4 span { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 6px; }
+  .compare-cell .cmp-chart { height: 150px; }
+  .scan-table th[data-sort] { cursor: pointer; user-select: none; }
+  .scan-table th[data-sort]:hover { color: var(--accent); }
+  .ctrl-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-right: -2px; }
+  .btn-group { display: flex; border: 1px solid var(--border); border-radius: 999px; overflow: hidden; background: var(--panel); }
+  .btn-group button {
+    background: transparent; color: var(--muted); border: none;
+    padding: 8px 16px; font-size: 14px; cursor: pointer;
+  }
+  .btn-group button + button { border-left: 1px solid var(--border); }
+  .btn-group button.active { background: var(--accent); color: var(--on-primary); font-weight: 600; }
+  .scan-config { font-size: 14px; font-weight: 600; color: var(--text); margin: 10px 0 0; }
+  .stack-compare { font-size: 13px; color: var(--muted); margin: -2px 0 16px; }
+  .live-caption { font-size: 12.5px; color: var(--muted); margin: 14px 0 0; }
+  .live-strip { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 0; }
+  .live-chip { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); background: var(--panel); border-radius: 999px; padding: 7px 13px; font-size: 13px; color: var(--text); }
+  .live-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .live-dot.long { background: var(--up); box-shadow: 0 0 7px var(--up); }
+  .live-dot.flat { background: var(--muted); opacity: .6; }
+  .stack-compare strong { color: var(--text); }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 16px; box-shadow: var(--shadow);
+  }
+  .card .label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card .value { font-size: 22px; font-weight: 700; margin-top: 2px; }
+  .card .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .pos { color: var(--up); }
+  .neg { color: var(--down); }
+  .chart-wrap {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 8px; margin-bottom: 12px; box-shadow: var(--shadow);
+  }
+  #priceChart { width: 100%; height: 380px; }
+  #indChart { width: 100%; height: 170px; }
+  .status { font-size: 13px; color: var(--muted); min-height: 20px; }
+  .status.error { color: var(--down); }
+  .scan-btn {
+    display: inline-block; background: var(--accent); color: var(--on-primary);
+    padding: 10px 22px; border: none; border-radius: 999px; font-weight: 600;
+    font-size: 14px; cursor: pointer; margin-bottom: 18px;
+  }
+  .scan-btn:hover { filter: brightness(1.08); }
+  .scan-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px; }
+  .scan-table th {
+    text-align: right; font-size: 11px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 0.5px; padding: 8px 10px; border-bottom: 1px solid var(--border);
+  }
+  .scan-table th:first-child, .scan-table td:first-child { text-align: left; }
+  .scan-table td { text-align: right; padding: 10px; border-bottom: 1px solid var(--border); }
+  .scan-table tr:hover td { background: var(--hover); }
+  .scan-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .method {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 20px; box-shadow: var(--shadow);
+  }
+  .method ul { padding-left: 20px; color: var(--muted); font-size: 14px; }
+  .method li { margin-bottom: 6px; }
+  code {
+    background: var(--code-bg); padding: 2px 6px; border-radius: 5px;
+    font-size: 13px; color: var(--accent);
+  }
+  details {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 14px 18px; margin-bottom: 10px; box-shadow: var(--shadow);
+  }
+  summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+  details p { margin: 10px 0 0; color: var(--muted); font-size: 14px; }
+  .kofi-btn {
+    display: inline-block; background: var(--kofi); color: #fff;
+    padding: 10px 22px; border-radius: 999px; font-weight: 600; font-size: 14px;
+  }
+  .kofi-btn:hover { background: #ff7b7b; text-decoration: none; }
+  footer { border-top: 1px solid var(--border); margin-top: 20px; padding: 44px 20px 24px; }
+  .footer-grid { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1.4fr 1.2fr; gap: 32px; padding-bottom: 30px; }
+  .footer-brand { font-weight: 700; font-size: 18px; color: var(--text); margin-bottom: 8px; }
+  .footer-brand span { color: var(--accent); }
+  .footer-mission { font-size: 13px; color: var(--muted); max-width: 280px; }
+  .footer-head { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); margin-bottom: 10px; }
+  .footer-col ul { list-style: none; }
+  .footer-col li { margin-bottom: 7px; }
+  .footer-col a { color: var(--muted); font-size: 14px; }
+  .footer-col a:hover { color: var(--text); text-decoration: none; }
+  footer .disclaimer { max-width: 860px; margin: 0 auto 14px; text-align: center; font-size: 12px; color: var(--muted); }
+  .footer-bottom { max-width: 1080px; margin: 0 auto; border-top: 1px solid var(--border); padding-top: 16px; text-align: center; font-size: 12px; color: var(--muted); }
+  .footer-bottom a { color: var(--accent); }
+  .guide-list { margin: 18px 0 0; padding-left: 22px; color: var(--muted); line-height: 1.7; }
+  .guide-list li { margin-bottom: 12px; }
+  .guide-list strong { color: var(--text); }
+  #scanBody tr[data-symbol] { cursor: pointer; }
+  #scanBody tr[data-symbol]:hover td { background: rgba(127,127,127,0.08); }
+  #scanBody tr.heat-top td:first-child { color: var(--accent); font-weight: 700; }
+  @media (max-width: 720px) {
+    .grid2 { grid-template-columns: 1fr; }
+    .nav ul { display: none; }
+    h1 { font-size: 26px; }
+    .scan-table { font-size: 12px; }
+    .scan-table th, .scan-table td { padding: 6px; }
+    .footer-grid { grid-template-columns: 1fr; gap: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <div class="nav-left">
+      <div class="brand">AEOX <span>Quant</span></div>
+      <div class="theme-picker" id="themePicker">
+        <button class="t-dot" data-theme="mint" style="--c:#3a9d6f" title="Fresh Mint" aria-label="Fresh Mint theme"></button>
+        <button class="t-dot" data-theme="sky" style="--c:#4a90d9" title="Cloud Sky" aria-label="Cloud Sky theme"></button>
+        <button class="t-dot" data-theme="peach" style="--c:#e8735a" title="Warm Peach" aria-label="Warm Peach theme"></button>
+        <button class="t-dot" data-theme="night" style="--c:#58a6ff" title="Night theme" aria-label="Night theme"></button>
+      </div>
+      <button id="langToggle" class="lang-btn" title="Switch language / 切换语言">中文</button>
+    </div>
+    <ul>
+      <li><a href="#dashboard" data-i18n="nav.dashboard">Dashboard</a></li>
+      <li><a href="#scan" data-i18n="nav.scan">Scan Center</a></li>
+      <li><a href="#methodology" data-i18n="nav.methodology">Methodology</a></li>
+      <li><a href="#about" data-i18n="nav.about">About</a></li>
+      <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <section id="dashboard">
+    <span class="badge" data-i18n="hero.badge">Educational demo — not financial advice</span>
+    <p class="eyebrow" data-i18n="hero.eyebrow">AEOX Quant · formerly QuantSignal Lab</p>
+    <h1 data-i18n="hero.h1">Crypto Indicator Dashboard</h1>
+    <p class="subtitle" data-i18n="hero.subtitle">Live candlestick charts with switchable indicators — classics plus our two house indicators: <strong style="color:var(--accent)">Lighthouse</strong> (1H pullback scanner) and <strong style="color:var(--accent)">QS Confluence</strong> (multi-factor resonance score) — on BTC, ETH, SOL, BNB &amp; XRP. Our philosophy: signals are cheap — disciplined exits are the product. Every backtest here runs with an active stop-loss and 0.1% fees per side, showing not just entries but exactly where you would have been stopped out. All math runs in your browser from Binance public data — open the page source and verify every calculation.</p>
+
+    <div class="controls">
+      <div class="btn-group" id="symbolGroup">
+        <button data-symbol="BTCUSDT" class="active">BTC</button>
+        <button data-symbol="ETHUSDT">ETH</button>
+        <button data-symbol="SOLUSDT">SOL</button>
+        <button data-symbol="BNBUSDT">BNB</button>
+        <button data-symbol="XRPUSDT">XRP</button>
+      </div>
+      <div class="btn-group" id="intervalGroup">
+        <button data-interval="1h" class="active">1H</button>
+        <button data-interval="4h">4H</button>
+        <button data-interval="1d">1D</button>
+      </div>
+      <span class="ctrl-label" data-i18n="ctrl.indicators">Indicators <em style="font-style:normal;opacity:.7">(multi-select)</em></span>
+      <div class="btn-group" id="indicatorGroup">
+        <button data-indicator="lh" class="active">Lighthouse</button>
+        <button data-indicator="qs">QS Confluence</button>
+        <button data-indicator="regime">QS Regime</button>
+        <button data-indicator="flow">QS Flow</button>
+        <button data-indicator="risk">QS Risk</button>
+        <button data-indicator="rsi">RSI (14)</button>
+        <button data-indicator="macd">MACD</button>
+        <button data-indicator="bb">Bollinger</button>
+        <button data-indicator="emaCross">EMA Cross</button>
+      </div>
+      <span class="ctrl-label" data-i18n="ctrl.stop">Stop-loss</span>
+      <div class="btn-group" id="stopGroup">
+        <button data-stop="3">3%</button>
+        <button data-stop="5" class="active">5%</button>
+        <button data-stop="8">8%</button>
+        <button data-stop="0" data-i18n="ctrl.off">Off</button>
+      </div>
+      <span class="ctrl-label" data-i18n="ctrl.exits">Exit engineering (experimental)</span>
+      <div class="btn-group" id="exitGroup">
+        <button data-exit="filter" data-i18n="exit.filter" title="Skip entries while Regime < -40 (downtrend confirmed)">Regime filter &gt; -40</button>
+        <button data-exit="quick" data-i18n="exit.quick" title="Replace each indicator's own SELL with RSI(14) crossing above 70">Quick exit RSI(14)&gt;70</button>
+      </div>
+      <div class="btn-group"><button id="shareBtn" data-i18n="ctrl.share" title="Copy a link to this exact setup">Share</button></div>
+    </div>
+    <div class="loadbar"></div>
+
+    <p class="live-caption" data-i18n="live.caption">Live signal states — confirmed at bar close, updates with your indicator and timeframe selection.</p>
+    <div class="live-strip" id="liveStrip"><div class="live-chip">Loading…</div></div>
+
+    <div class="stats">
+      <div class="card"><div class="label" data-i18n="stat.signals">Signals (1000 bars)</div><div class="value" id="statSignals">—</div><div class="sub" id="statSignalsSub">&nbsp;</div></div>
+      <div class="card"><div class="label" data-i18n="stat.trades">Closed trades</div><div class="value" id="statTrades">—</div><div class="sub" id="statTradesSub">&nbsp;</div></div>
+      <div class="card"><div class="label" data-i18n="stat.win">Win rate</div><div class="value" id="statWinRate">—</div><div class="sub" id="statWinSub">&nbsp;</div></div>
+      <div class="card"><div class="label" data-i18n="stat.return">Strategy return</div><div class="value" id="statReturn">—</div><div class="sub" id="statHold">vs buy &amp; hold: —</div></div>
+      <div class="card"><div class="label" data-i18n="stat.dd">Max drawdown</div><div class="value" id="statDD">—</div><div class="sub" id="statDdSub">&nbsp;</div></div>
+    </div>
+    <p class="stack-compare" id="stackCompare" style="display:none"></p>
+
+    <div class="chart-wrap"><div id="priceChart"></div></div>
+    <div class="chart-wrap" id="indWrap"><div id="indChart"></div></div>
+    <p class="eq-caption" data-i18n="eq.caption">Growth of $100 — strategy vs buy &amp; hold (same engine, fees &amp; stop included)</p>
+    <div class="chart-wrap" id="eqWrap" style="height:220px"><div id="eqChart"></div></div>
+    <div class="status" id="status">Loading market data…</div>
+  </section>
+
+  <section id="scan">
+    <h2 data-i18n="scan.h2">Scan Center — One Table, Two Views</h2>
+    <p class="subtitle" data-i18n="scan.subtitle">One honest engine — fees and stop-loss included, long-only, 1000 bars. Switch between <strong>your setup</strong> (5 coins × 3 timeframes, click a row to load it into the chart) and <strong>all indicators</strong> (head-to-head on your selected timeframe, averaged across coins).</p>
+    <div class="controls" style="margin:16px 0 0">
+      <div class="btn-group" id="scanModeGroup">
+        <button data-mode="mine" class="active" id="scanModeMine">My setup (15 runs)</button>
+        <button data-mode="all" id="scanModeAll">All indicators (7 × 5)</button>
+        <button data-mode="compare" id="scanModeCompare">Compare (5 charts)</button>
+      </div>
+    </div>
+    <p class="scan-config" id="scanConfig">—</p>
+    <div class="chart-wrap" style="padding:14px; margin-top:14px">
+      <table class="scan-table" style="margin-bottom:0" id="scanTable">
+        <thead id="scanHead"></thead>
+        <tbody id="scanBody">
+          <tr><td colspan="8" style="text-align:center;color:var(--muted)">Scanning…</td></tr>
+        </tbody>
+      </table>
+      <div class="compare-grid" id="compareGrid" style="display:none"></div>
+      <p class="scan-note" id="scanNote"></p>
+    </div>
+  </section>
+
+  <section id="methodology">
+    <h2 data-i18n="method.h2">How It Works</h2>
+    <div class="grid2">
+      <div class="method">
+        <h3 data-i18n="method.h3a">Signal rules (per indicator)</h3>
+        <ul>
+          <li data-i18n="method.lh"><strong style="color:var(--accent)">Lighthouse (ours)</strong> — 1H short-term swing scanner: BUY a sharp pullback (RSI(4) crossing below 10) only while price holds above the SMA100 trend guard; SELL when momentum normalizes (RSI(4) crossing above 70). Tuned and out-of-sample validated on 1H data across 5 coins.</li>
+          <li data-i18n="method.qs"><strong style="color:var(--accent)">QS Confluence v1 (ours, β)</strong> — a 0-100 score blending RSI momentum (35%), Bollinger %B position (25%), EMA20/50 trend spread (15%) and funding-rate sentiment (25%, contrarian: crowded longs push the score up). BUY when the score crosses below 20; SELL when it crosses above 80. The funding z-score uses the full available history in this demo (minor look-ahead); TradingView feeds don't expose funding rates, so the Pine version runs the identical three market factors — exactly this page's funding-unavailable fallback mode.</li>
+          <li data-i18n="method.regime"><strong style="color:var(--text)">QS Regime (β)</strong> — trend-environment filter: EMA50 vs EMA200 spread scaled to ±100. Above +40 = established uptrend (trend-following friendly), below -40 = downtrend, in between = ranging (mean-reversion friendly).</li>
+          <li data-i18n="method.flow"><strong style="color:var(--text)">QS Flow (β)</strong> — order-flow proxy from taker-buy volume share (EMA-14 smoothed) plus volume expansion (20-bar z-score). BUY when buying pressure crosses above +20 on expanding volume; SELL when it crosses below -20.</li>
+          <li data-i18n="method.risk"><strong style="color:var(--text)">QS Risk (β) — our stop-loss engineering</strong> — not a signal: outputs a volatility-adaptive stop distance (2×ATR14, clamped 2–12%) so your stop breathes with the market instead of sitting at a fixed target. Too tight and it gets whipsawed; too wide and it wastes risk budget — this tool keeps the loss side of the equation honest.</li>
+          <li data-i18n="method.stack"><strong style="color:var(--text)">QS Stack (multi-select)</strong> — select multiple indicators above and they run as one system: enter only when all selected signal indicators are simultaneously long, exit when any one turns flat. Including QS Risk in the selection switches the stop-loss to its 2×ATR adaptive distance automatically.</li>
+          <li data-i18n="method.exits"><strong style="color:var(--accent)">Exit engineering (experimental toggles)</strong> — two optional switches, both validated on 4 windows (bull / bear / deep-bear, 1H &amp; 4H, ~22k bars). <em>Regime filter</em>: skip entries while QS Regime &lt; -40 (downtrend confirmed) — in the deep-bear window it cut QS Confluence's loss from -18% to -1% and max drawdown by ~16 points; the honest cost is slightly lower expectancy in strong bull windows. The -40 threshold was fitted on this same historical deep-bear data — treat it as a defensive guard, not a guarantee for future extreme regimes. <em>Quick exit</em>: replace any indicator's own SELL with RSI(14)&gt;70 — roughly doubles the win rate (e.g. Confluence 28%→51-62%) but does <strong>not</strong> raise expectancy: you're buying win rate, not money. Both stay off by default.</li>
+          <li data-i18n="method.classics"><strong style="color:var(--text)">Classics</strong> — RSI (14), MACD (12,26,9), Bollinger (20, 2σ) and EMA cross (20/50) follow standard textbook rules: oversold/overbought reversals, signal-line crossovers, band touches and golden/death crosses.</li>
+        </ul>
+      </div>
+      <div class="method">
+        <h3 data-i18n="method.h3b">Backtest &amp; risk rules</h3>
+        <ul>
+          <li data-i18n="method.br1">Stop-loss: 3% / 5% / 8% or off — triggered intrabar at the stop price.</li>
+          <li data-i18n="method.br2">Fees: 0.1% per side (Binance spot taker) on every entry and exit. Perpetual funding payments and slippage are not modeled — treat thin deep-bear edges (low single-digit %) as roughly breakeven.</li>
+          <li data-i18n="method.br3">Long-only, one position at a time, entries/exits at bar close.</li>
+          <li data-i18n="method.br4">Max drawdown measured on the trade-by-trade equity curve.</li>
+          <li data-i18n="method.br5">All math runs client-side — <code>view-source</code> to audit it.</li>
+          <li data-i18n="method.br6">Signals vs trades: threshold indicators can fire repeatedly in the same direction (e.g. consecutive oversold bars); the engine acts only on the first — redundant signals are skipped, and chart arrows mark actual entries/exits (STOP = stop-loss exit).</li>
+          <li data-i18n="method.br7">Same-bar stop &amp; re-entry: if a bar dips through the stop price intrabar and a buy signal is still valid at its close, the engine stops out first (at the stop price) and re-enters at that same bar's close — both arrows share the candle. There is no cooldown after a stop; every bar is evaluated independently.</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:16px" class="subtitle" data-i18n="method.outro">Two house indicators, two jobs: <strong style="color:var(--accent)">Lighthouse</strong> hunts 1H pullback swings inside an established trend; <strong style="color:var(--accent)">QS Confluence</strong> demands momentum, volatility position and trend to speak together before it commits. But entries are the easy half — a stop-loss caps every loss at a known price, and that left-tail discipline is what keeps you in the game. Both run here as free, fixed public versions. The <strong>premium suite</strong> (every AEOX Quant indicator in one bundle: ATR-adaptive stops, stop alerts, take-profit logic, adjustable weights, volume confirmation) is in final cross-platform alignment testing — it will open for purchase as a single package once verification completes. This site is currently a research showcase; nothing is sold yet.</p>
+  </section>
+
+  <section id="guide">
+    <h2 data-i18n="guide.h2">How To Use This — A Practical Workflow</h2>
+    <p class="subtitle" data-i18n="guide.sub">Whether you're evaluating the indicators here on the dashboard or checking the Pine Script suite once it opens, the workflow is the same. This dashboard is your pre-trade screening room: filter first, verify second, size your risk last.</p>
+    <ol class="guide-list">
+      <li data-i18n="guide.s1"><strong>Screen before you trade.</strong> Start from the Scan Center ranking above — pick candidates from the top rows, and re-scan weekly and before every new position: friendliness rotates with market regimes.</li>
+      <li data-i18n="guide.s2"><strong>Verify on the chart, respect the sample size.</strong> Click a row, scroll through the BUY/SELL marks and ask honestly: would I have taken these trades? Treat anything under ~30 closed trades as statistically thin.</li>
+      <li data-i18n="guide.s3"><strong>Match the stop-loss to your risk.</strong> Every number here assumes the selected stop-loss and 0.1% fees per side — different fees or no stop means a different, worse strategy. Re-scan with 3% / 8% to see sensitivity, or use QS Risk for a volatility-adaptive stop.</li>
+      <li data-i18n="guide.s4"><strong>Size positions around the drawdown.</strong> Max drawdown is your risk budget: if a setup drew down 18% in the past, assume it can do worse — size so a repeat won't take you out of the game.</li>
+    </ol>
+    <p class="subtitle" style="margin-top:18px" data-i18n="guide.stacking"><strong style="color:var(--text)">Stacking (multi-select):</strong> the indicator buttons above support multi-select. Select several — e.g. all four QS tools — and the dashboard runs them as one system: a position opens only when <em>every</em> selected signal indicator is long at the same time, and closes the moment any one of them turns. The price is a much lower trade count — that is by design: every indicator has false signals, and requiring all of them to agree trades frequency for signal quality, so judge a stack by its drawdown and per-trade quality, not by trade count. Add QS Risk to the selection and the stop-loss becomes volatility-adaptive (2×ATR) instead of the fixed 3/5/8%. The Scan Center then re-ranks all 15 coin × timeframe combinations for your whole stack.</p>
+    <p class="subtitle" style="margin-top:14px" data-i18n="guide.pine"><strong style="color:var(--text)">Pine Script suite (in preparation):</strong> the suite is being aligned to generate the same BUY/SELL events you see here — same math, same thresholds (QS Flow uses a candle-anatomy pressure proxy on TradingView, where taker data isn't exposed). It opens for purchase after cross-platform verification completes; until then this dashboard is the reference implementation, and every number here can be reproduced independently.</p>
+  </section>
+
+  <section id="about">
+    <h2 data-i18n="about.h2">About This Project</h2>
+    <p data-i18n="about.p1">AEOX Quant (formerly QuantSignal Lab) is the quant pillar of the AEOX network — an independent, build-in-public project exploring transparent crypto technical analysis. Every indicator we ship ships with its full computation logic visible and auditable — because a signal you can't verify is just a story.</p>
+    <p data-i18n="about.p2">This site is currently a public research showcase — the dashboard, the full backtest methodology and the lab reports are open and free to explore, and nothing is sold yet. The TradingView Pine Script suite — every AEOX Quant indicator in one bundle (ATR-adaptive stops, take-profit logic, adjustable weights, volume confirmation, TradingView alerts) — is in final cross-platform alignment testing and will open for purchase later, announced via <a href="https://go.aeox.uk/" rel="noopener" target="_blank">go.aeox.uk</a>.</p>
+    <p style="margin-top:18px; display:flex; gap:12px; flex-wrap:wrap; align-items:center">
+      <a class="scan-btn" style="margin-bottom:0" href="https://go.aeox.uk/" rel="noopener" target="_blank" data-i18n="about.cta1">AEOX resource hub — go.aeox.uk</a>
+      <span class="kofi-btn" style="margin-bottom:0;opacity:.55;cursor:default" data-i18n="about.cta2">Premium suite — coming soon</span>
+    </p>
+    <p id="roadmap" class="subtitle" style="margin-top:24px" data-i18n="about.roadmap"><strong>Roadmap:</strong> Phase 1 (now) — public research dashboard: methodology, out-of-sample lab reports and scan tooling, all open. Phase 2 (in progress) — Pine Script v5 cross-platform alignment and signal-parity verification. Phase 3 (later) — the premium suite opens for purchase as one bundle. Take-profit &amp; trailing-stop variants and daily market-scan reports follow.</p>
+  </section>
+
+  <section id="faq">
+    <h2 data-i18n="faq.h2">FAQ</h2>
+    <details>
+      <summary data-i18n="faq.q1">Is this financial advice?</summary>
+      <p data-i18n="faq.a1">No. This is an educational and technical demonstration of indicator computation. Nothing on this page is investment advice, and past signal performance does not guarantee future results.</p>
+    </details>
+    <details>
+      <summary data-i18n="faq.q2">What is QS Confluence?</summary>
+      <p data-i18n="faq.a2">QS Confluence is our house multi-factor indicator: a 0-100 score blending RSI momentum (35%), Bollinger position (25%), EMA trend spread (15%) and funding-rate sentiment (25%, contrarian). A premium version — with adjustable weights and extra factors — is planned for the all-in-one AEOX Quant suite, which opens for purchase later (this site is currently a research showcase).</p>
+    </details>
+    <details>
+      <summary data-i18n="faq.q5">What is Lighthouse?</summary>
+      <p data-i18n="faq.a5">Lighthouse is our 1H-optimized short-term swing scanner: it buys sharp pullbacks (RSI(4) below 10) only while price holds above its SMA100 trend guard, and exits when momentum normalizes (RSI(4) above 70). It was validated with out-of-sample grid testing across 5 coins.</p>
+    </details>
+    <details>
+      <summary data-i18n="faq.q3">Do the backtests include fees and stop-loss?</summary>
+      <p data-i18n="faq.a3">Yes. Every backtest on this page models 0.1% trading fees per side and a configurable intrabar stop-loss (3%, 5%, 8% or off). We believe results without fees and risk controls are meaningless.</p>
+    </details>
+    <details>
+      <summary data-i18n="faq.q4">Can I verify the indicator calculations?</summary>
+      <p data-i18n="faq.a4">Yes. All indicator calculations, signal detection, and backtest logic run in JavaScript in your browser. Open the page source and verify every line yourself.</p>
+    </details>
+    <details>
+      <summary data-i18n="faq.q6">Why are there so few signals?</summary>
+      <p data-i18n="faq.a6">By design. Lighthouse requires an extreme panic flush (RSI(4) below 10) <em>inside</em> an uptrend (above SMA100) — on 1H that historically fires about once per coin per month. Smooth trend legs produce no entries because there is no panic to buy, and a downtrend produces none because the trend guard blocks them. That scarcity is the edge, not a flaw: the intended workflow is scanning multiple coins (Scan Center) plus cloud alerts — not staring at one chart. If an indicator signals every day, it is selling you activity, not discipline.</p>
+    </details>
+  </section>
+
+  <section id="legal">
+    <h2 data-i18n="legal.h2">Legal, Privacy &amp; License</h2>
+    <p data-i18n="legal.privacy"><strong style="color:var(--text)">Privacy:</strong> this is a static page — no accounts, no tracking, no analytics. Your theme and language preferences stay in your browser's localStorage, and market data is fetched by your own browser directly from Binance's public API; nothing passes through our servers.</p>
+    <p data-i18n="legal.license"><strong style="color:var(--text)">Product license:</strong> nothing is currently for sale. When the premium Pine Script suite opens, it will be licensed for personal use on one TradingView account; redistribution, resale or public sharing of the scripts will not be permitted.</p>
+    <p data-i18n="legal.refund"><strong style="color:var(--text)">Refunds:</strong> no products are currently sold. When the premium suite opens, all products will be digital goods delivered instantly — refund terms will be published on the shop page before any purchase is possible.</p>
+    <p data-i18n="legal.risk"><strong style="color:var(--text)">Risk:</strong> nothing on this site is financial, investment or trading advice, and no representation is made that any strategy will be profitable. Past performance — including every backtest shown here — is not indicative of future results. Cryptocurrency trading involves substantial risk of loss and is not suitable for every investor.</p>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-col">
+      <div class="footer-brand">AEOX <span>Lab</span></div>
+      <p class="footer-mission" data-i18n="foot.mission">An independent lab building transparent, browser-native tools across SEO, AI, quant and eastern energy. No bloat, no tracking — view-source and verify.</p>
+    </div>
+    <div class="footer-col">
+      <div class="footer-head" data-i18n="foot.site">This Site</div>
+      <ul>
+        <li><a href="#dashboard" data-i18n="nav.dashboard">Dashboard</a></li>
+        <li><a href="#scan" data-i18n="nav.scan">Scan Center</a></li>
+        <li><a href="#methodology" data-i18n="nav.methodology">Methodology</a></li>
+        <li><a href="#about" data-i18n="nav.about">About</a></li>
+        <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
+        <li><a href="#legal" data-i18n="nav.legal">Legal</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-head" data-i18n="foot.network">AEOX Network</div>
+      <ul>
+        <li><a href="https://aeox.uk/" rel="noopener" target="_blank" data-i18n="foot.n1">AEOX — AI Answer Engine Diagnostics</a></li>
+        <li><a href="https://anchor.aeox.uk/" rel="noopener" target="_blank" data-i18n="foot.n2">Anchor — Content Automation Engine</a></li>
+        <li><a href="https://cli.aeox.uk/" rel="noopener" target="_blank" data-i18n="foot.n3">aeox-cli — AI Dev Toolbox</a></li>
+        <li><a href="https://chat.aeox.uk/" rel="noopener" target="_blank" data-i18n="foot.n5">Chat — Multi-Engine AI Chat</a></li>
+        <li><a href="https://shui.aeox.uk/" rel="noopener" target="_blank" data-i18n="foot.n4">Shui — Eastern Energy Reports</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <div class="footer-head" data-i18n="foot.resources">Resources</div>
+      <ul>
+        <li><a href="https://go.aeox.uk/" rel="noopener" target="_blank" data-i18n="foot.r1">AEOX resource hub — go.aeox.uk</a></li>
+        <li><span style="color:var(--muted)" data-i18n="foot.r2">Premium suite — coming soon</span></li>
+        <li><a href="https://quant.aeox.uk/">quant.aeox.uk</a></li>
+      </ul>
+    </div>
+  </div>
+  <p class="disclaimer" data-i18n="foot.disclaimer">Disclaimer: Cryptocurrency trading involves substantial risk of loss and is not suitable for every investor. Content on this site is for educational and technical demonstration purposes only and does not constitute financial, investment, or trading advice. Past performance — including all backtests shown here — is not indicative of future results. We are not licensed investment advisors. Always do your own research.</p>
+  <p class="footer-bottom" data-i18n="foot.bottom">© 2026 AEOX · AEOX Quant — Part of the AEOX network · Data: Binance public API · Charts: TradingView Lightweight Charts · More AEOX resources on <a href="https://go.aeox.uk/" rel="noopener" target="_blank">go.aeox.uk</a> · Premium suite: coming soon</p>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var I18N = {
+    en: {
+      'doc.title': 'AEOX Quant — Crypto Indicator Dashboard: Lighthouse & QS Confluence + RSI, MACD, Bollinger, EMA with Stop-Loss Backtests',
+      'nav.dashboard': 'Dashboard', 'nav.scan': 'Scan Center', 'nav.methodology': 'Methodology', 'nav.about': 'About', 'nav.faq': 'FAQ', 'nav.legal': 'Legal',
+      'hero.badge': 'Educational demo — not financial advice',
+      'hero.eyebrow': 'AEOX Quant · formerly QuantSignal Lab',
+      'hero.h1': 'Crypto Indicator Dashboard',
+      'hero.subtitle': 'Live candlestick charts with switchable indicators — classics plus our two house indicators: <strong style="color:var(--accent)">Lighthouse</strong> (1H pullback scanner) and <strong style="color:var(--accent)">QS Confluence</strong> (multi-factor resonance score) — on BTC, ETH, SOL, BNB &amp; XRP. Our philosophy: signals are cheap — disciplined exits are the product. Every backtest here runs with an active stop-loss and 0.1% fees per side, showing not just entries but exactly where you would have been stopped out. All math runs in your browser from Binance public data — open the page source and verify every calculation.',
+      'ctrl.indicators': 'Indicators <em style="font-style:normal;opacity:.7">(multi-select)</em>',
+      'ctrl.stop': 'Stop-loss', 'ctrl.off': 'Off',
+      'ctrl.exits': 'Exit engineering <em style="font-style:normal;opacity:.7">(experimental)</em>',
+      'exit.filter': 'Regime filter &gt; -40', 'exit.quick': 'Quick exit RSI(14)&gt;70',
+      'ctrl.share': 'Share', 'share.copied': '✓ Copied',
+      'eq.caption': 'Growth of $100 — strategy vs buy &amp; hold (same engine, fees &amp; stop included)',
+      'eq.strategy': 'Strategy', 'eq.hold': 'Hold',
+      'scan.modeCompare': 'Compare ({n} charts)',
+      'scan.configCompare': '{name} · {tf} · stop {stop} — one mini chart per coin, markers = actual fills; click to open',
+      'scan.noteCompare': 'All {tf} · {bars} bars per coin · same engine (fees, stop, exit toggles). Click any card to load it into the main chart.',
+      'compare.noTrades': 'no closed trades',
+      'stat.signals': 'Signals (1000 bars)', 'stat.trades': 'Closed trades', 'stat.win': 'Win rate', 'stat.return': 'Strategy return', 'stat.dd': 'Max drawdown',
+      'stat.holdPrefix': 'vs buy &amp; hold: ',
+      'stat.tradesSubOpen': '{n} stopped out · 1 open position', 'stat.tradesSubFlat': '{n} stopped out · no open position',
+      'stat.ddSub': 'stop {stop} · fee 0.1%/side',
+      'scan.h2': 'Scan Center — One Table, Two Views',
+      'scan.subtitle': 'One honest engine — fees and stop-loss included, long-only, 1000 bars. Switch between <strong>your setup</strong> (5 coins × 3 timeframes, click a row to load it into the chart) and <strong>all indicators</strong> (head-to-head on your selected timeframe, averaged across coins).',
+      'scan.modeMine': 'My setup ({n} runs)',
+      'scan.modeAll': 'All indicators ({n} × {m})',
+      'live.caption': 'Live signal states — confirmed at bar close, updates with your indicator and timeframe selection.',
+      'live.long': 'Long',
+      'live.flat': 'Flat',
+      'live.buyAgo': 'BUY {n} bars ago',
+      'live.sellAgo': 'SELL {n} bars ago',
+      'live.stopAgo': 'stopped out {n} bars ago',
+      'live.pending': 'signal on live bar — awaits close',
+      'live.noSignal': 'no signal in 1000 bars',
+      'live.loading': 'Loading…',
+      'live.failed': 'Data unavailable',
+      'scan.configMine': '{name} · stop-loss {stop} · {c} coins × {tfs}',
+      'scan.configAll': '{tf} interval · stop-loss {stop} · every indicator solo, averaged across {c} coins',
+      'scan.emptyStack': 'No trades in {bars} bars — this stack is highly selective. Try removing an indicator, switching to 1H (more opportunities), or widening the stop-loss.',
+      'scan.scanning': 'Scanning {n} runs…',
+      'scan.noData': 'Could not fetch market data — Binance may be unavailable in your region.',
+      'scan.riskMsg': '{name} is a sizing/filter tool, not an entry signal — switch indicators above to rank market friendliness.',
+      'scan.riskNote': 'No backtest runs for this tool. Engine reference: long-only, bar-close entries/exits, intrabar stop-loss, 0.1% fee per side.',
+      'scan.noteMine': '{name} · {rows} of {total} combinations · {bars} bars per pair · stop-loss {stop} · fee 0.1%/side · long-only, ranked by net return. Friendliness rotates with market regime — this describes the recent past, not a promise about the future. Click a row to inspect it on the chart.',
+      'scan.noteAll': '{tf} interval · stop-loss {stop} · fee 0.1%/side · {bars} bars per coin · long-only · each indicator solo, averaged across {m} coins',
+      'scan.failed': 'Failed to fetch data ({msg}). Try again or switch interval.',
+      'compare.line': '<strong>Stack vs {name} solo:</strong> trades {t1} vs {t2} · win rate {w1} vs {w2} · max drawdown {d1} vs {d2} · return {r1} vs {r2}',
+      'th.indicator': 'Indicator', 'th.coin': 'Coin', 'th.tf': 'Timeframe', 'th.trades': 'Trades', 'th.winRate': 'Win rate', 'th.edge': 'Edge', 'th.netReturn': 'Net return', 'th.maxDD': 'Max drawdown', 'th.avgReturn': 'Avg return', 'th.avgEdge': 'Avg edge vs hold', 'th.avgWin': 'Avg win rate', 'th.worstDD': 'Worst drawdown', 'th.totalTrades': 'Total trades',
+      'method.h2': 'How It Works', 'method.h3a': 'Signal rules (per indicator)', 'method.h3b': 'Backtest &amp; risk rules',
+      'method.lh': '<strong style="color:var(--accent)">Lighthouse (ours)</strong> — 1H short-term swing scanner: BUY a sharp pullback (RSI(4) crossing below 10) only while price holds above the SMA100 trend guard; SELL when momentum normalizes (RSI(4) crossing above 70). Tuned and out-of-sample validated on 1H data across 5 coins.',
+      'method.qs': '<strong style="color:var(--accent)">QS Confluence v1 (ours, β)</strong> — a 0-100 score blending RSI momentum (35%), Bollinger %B position (25%), EMA20/50 trend spread (15%) and funding-rate sentiment (25%, contrarian: crowded longs push the score up). BUY when the score crosses below 20; SELL when it crosses above 80. The funding z-score uses the full available history in this demo (minor look-ahead); TradingView feeds don\'t expose funding rates, so the Pine version runs the identical three market factors — exactly this page\'s funding-unavailable fallback mode.',
+      'method.regime': '<strong style="color:var(--text)">QS Regime (β)</strong> — trend-environment filter: EMA50 vs EMA200 spread scaled to ±100. Above +40 = established uptrend (trend-following friendly), below -40 = downtrend, in between = ranging (mean-reversion friendly).',
+      'method.flow': '<strong style="color:var(--text)">QS Flow (β)</strong> — order-flow proxy from taker-buy volume share (EMA-14 smoothed) plus volume expansion (20-bar z-score). BUY when buying pressure crosses above +20 on expanding volume; SELL when it crosses below -20.',
+      'method.risk': '<strong style="color:var(--text)">QS Risk (β) — our stop-loss engineering</strong> — not a signal: outputs a volatility-adaptive stop distance (2×ATR14, clamped 2–12%) so your stop breathes with the market instead of sitting at a fixed target. Too tight and it gets whipsawed; too wide and it wastes risk budget — this tool keeps the loss side of the equation honest.',
+      'method.stack': '<strong style="color:var(--text)">QS Stack (multi-select)</strong> — select multiple indicators above and they run as one system: enter only when all selected signal indicators are simultaneously long, exit when any one turns flat. Including QS Risk in the selection switches the stop-loss to its 2×ATR adaptive distance automatically.',
+      'method.exits': '<strong style="color:var(--accent)">Exit engineering (experimental toggles)</strong> — two optional switches, both validated on 4 windows (bull / bear / deep-bear, 1H &amp; 4H, ~22k bars). <em>Regime filter</em>: skip entries while QS Regime &lt; -40 (downtrend confirmed) — in the deep-bear window it cut QS Confluence\'s loss from -18% to -1% and max drawdown by ~16 points; the honest cost is slightly lower expectancy in strong bull windows. The -40 threshold was fitted on this same historical deep-bear data — treat it as a defensive guard, not a guarantee for future extreme regimes. <em>Quick exit</em>: replace any indicator\'s own SELL with RSI(14)&gt;70 — roughly doubles the win rate (e.g. Confluence 28%→51-62%) but does <strong>not</strong> raise expectancy: you\'re buying win rate, not money. Both stay off by default.',
+      'method.classics': '<strong style="color:var(--text)">Classics</strong> — RSI (14), MACD (12,26,9), Bollinger (20, 2σ) and EMA cross (20/50) follow standard textbook rules: oversold/overbought reversals, signal-line crossovers, band touches and golden/death crosses.',
+      'method.br1': 'Stop-loss: 3% / 5% / 8% or off — triggered intrabar at the stop price.',
+      'method.br2': 'Fees: 0.1% per side (Binance spot taker) on every entry and exit. Perpetual funding payments and slippage are not modeled — treat thin deep-bear edges (low single-digit %) as roughly breakeven.',
+      'method.br3': 'Long-only, one position at a time, entries/exits at bar close.',
+      'method.br4': 'Max drawdown measured on the trade-by-trade equity curve.',
+      'method.br5': 'All math runs client-side — <code>view-source</code> to audit it.',
+      'method.br6': 'Signals vs trades: threshold indicators can fire repeatedly in the same direction (e.g. consecutive oversold bars); the engine acts only on the first — redundant signals are skipped, and chart arrows mark actual entries/exits (STOP = stop-loss exit).',
+      'method.br7': 'Same-bar stop &amp; re-entry: if a bar dips through the stop price intrabar and a buy signal is still valid at its close, the engine stops out first (at the stop price) and re-enters at that same bar\'s close — both arrows share the candle. There is no cooldown after a stop; every bar is evaluated independently.',
+      'method.outro': 'Two house indicators, two jobs: <strong style="color:var(--accent)">Lighthouse</strong> hunts 1H pullback swings inside an established trend; <strong style="color:var(--accent)">QS Confluence</strong> demands momentum, volatility position and trend to speak together before it commits. But entries are the easy half — a stop-loss caps every loss at a known price, and that left-tail discipline is what keeps you in the game. Both run here as free, fixed public versions. The <strong>premium suite</strong> (every AEOX Quant indicator in one bundle: ATR-adaptive stops, stop alerts, take-profit logic, adjustable weights, volume confirmation) is in final cross-platform alignment testing — it will open for purchase as a single package once verification completes. This site is currently a research showcase; nothing is sold yet.',
+      'guide.h2': 'How To Use This — A Practical Workflow',
+      'guide.sub': 'Whether you\'re evaluating the free indicators here or you\'ve bought a Lighthouse / QS Confluence Pine Script, the workflow is the same. This dashboard is your pre-trade screening room: filter first, verify second, size your risk last.',
+      'guide.s1': '<strong>Screen before you trade.</strong> Start from the Scan Center ranking above — pick candidates from the top rows, and re-scan weekly and before every new position: friendliness rotates with market regimes.',
+      'guide.s2': '<strong>Verify on the chart, respect the sample size.</strong> Click a row, scroll through the BUY/SELL marks and ask honestly: would I have taken these trades? Treat anything under ~30 closed trades as statistically thin.',
+      'guide.s3': '<strong>Match the stop-loss to your risk.</strong> Every number here assumes the selected stop-loss and 0.1% fees per side — different fees or no stop means a different, worse strategy. Re-scan with 3% / 8% to see sensitivity, or use QS Risk for a volatility-adaptive stop.',
+      'guide.s4': '<strong>Size positions around the drawdown.</strong> Max drawdown is your risk budget: if a setup drew down 18% in the past, assume it can do worse — size so a repeat won\'t take you out of the game.',
+      'guide.stacking': '<strong style="color:var(--text)">Stacking (multi-select):</strong> the indicator buttons above support multi-select. Select several — e.g. all four QS tools — and the dashboard runs them as one system: a position opens only when <em>every</em> selected signal indicator is long at the same time, and closes the moment any one of them turns. The price is a much lower trade count — that is by design: every indicator has false signals, and requiring all of them to agree trades frequency for signal quality, so judge a stack by its drawdown and per-trade quality, not by trade count. Add QS Risk to the selection and the stop-loss becomes volatility-adaptive (2×ATR) instead of the fixed 3/5/8%. The Scan Center then re-ranks all 15 coin × timeframe combinations for your whole stack.',
+      'guide.pine': '<strong style="color:var(--text)">Pine Script suite (in preparation):</strong> the suite is being aligned to generate the same BUY/SELL events you see here — same math, same thresholds (QS Flow uses a candle-anatomy pressure proxy on TradingView, where taker data isn\'t exposed). It opens for purchase after cross-platform verification completes; until then this dashboard is the reference implementation, and every number here can be reproduced independently.',
+      'about.h2': 'About This Project',
+      'about.p1': 'AEOX Quant (formerly QuantSignal Lab) is the quant pillar of the AEOX network — an independent, build-in-public project exploring transparent crypto technical analysis. Every indicator we ship ships with its full computation logic visible and auditable — because a signal you can\'t verify is just a story.',
+      'about.p2': 'This site is currently a public research showcase — the dashboard, the full backtest methodology and the lab reports are open and free to explore, and nothing is sold yet. The TradingView Pine Script suite — every AEOX Quant indicator in one bundle (ATR-adaptive stops, take-profit logic, adjustable weights, volume confirmation, TradingView alerts) — is in final cross-platform alignment testing and will open for purchase later, announced via <a href="https://go.aeox.uk/" rel="noopener" target="_blank">go.aeox.uk</a>.',
+      'about.cta1': 'Get free indicator scripts', 'about.cta2': 'Premium suite on Ko-fi',
+      'about.roadmap': '<strong>Roadmap:</strong> Phase 1 (now) — public research dashboard: methodology, out-of-sample lab reports and scan tooling, all open. Phase 2 (in progress) — Pine Script v5 cross-platform alignment and signal-parity verification. Phase 3 (later) — the premium suite opens for purchase as one bundle. Take-profit &amp; trailing-stop variants and daily market-scan reports follow.',
+      'faq.h2': 'FAQ',
+      'faq.q1': 'Is this financial advice?', 'faq.a1': 'No. This is an educational and technical demonstration of indicator computation. Nothing on this page is investment advice, and past signal performance does not guarantee future results.',
+      'faq.q2': 'What is QS Confluence?', 'faq.a2': 'QS Confluence is our house multi-factor indicator: a 0-100 score blending RSI momentum (35%), Bollinger position (25%), EMA trend spread (15%) and funding-rate sentiment (25%, contrarian). A premium version — with adjustable weights and extra factors — is planned for the all-in-one AEOX Quant suite, which opens for purchase later (this site is currently a research showcase).',
+      'faq.q5': 'What is Lighthouse?', 'faq.a5': 'Lighthouse is our 1H-optimized short-term swing scanner: it buys sharp pullbacks (RSI(4) below 10) only while price holds above its SMA100 trend guard, and exits when momentum normalizes (RSI(4) above 70). It was validated with out-of-sample grid testing across 5 coins.',
+      'faq.q3': 'Do the backtests include fees and stop-loss?', 'faq.a3': 'Yes. Every backtest on this page models 0.1% trading fees per side and a configurable intrabar stop-loss (3%, 5%, 8% or off). We believe results without fees and risk controls are meaningless.',
+      'faq.q4': 'Can I verify the indicator calculations?', 'faq.a4': 'Yes. All indicator calculations, signal detection, and backtest logic run in JavaScript in your browser. Open the page source and verify every line yourself.',
+      'faq.q6': 'Why are there so few signals?', 'faq.a6': 'By design. Lighthouse requires an extreme panic flush (RSI(4) below 10) <em>inside</em> an uptrend (above SMA100) — on 1H that historically fires about once per coin per month. Smooth trend legs produce no entries because there is no panic to buy, and a downtrend produces none because the trend guard blocks them. That scarcity is the edge, not a flaw: the intended workflow is scanning multiple coins (Scan Center) plus cloud alerts — not staring at one chart. If an indicator signals every day, it is selling you activity, not discipline.',
+      'legal.h2': 'Legal, Privacy &amp; License',
+      'legal.privacy': '<strong style="color:var(--text)">Privacy:</strong> this is a static page — no accounts, no tracking, no analytics. Your theme and language preferences stay in your browser\'s localStorage, and market data is fetched by your own browser directly from Binance\'s public API; nothing passes through our servers.',
+      'legal.license': '<strong style="color:var(--text)">Product license:</strong> nothing is currently for sale. When the premium Pine Script suite opens, it will be licensed for personal use on one TradingView account; redistribution, resale or public sharing of the scripts will not be permitted.',
+      'legal.refund': '<strong style="color:var(--text)">Refunds:</strong> no products are currently sold. When the premium suite opens, all products will be digital goods delivered instantly — refund terms will be published on the shop page before any purchase is possible.',
+      'legal.risk': '<strong style="color:var(--text)">Risk:</strong> nothing on this site is financial, investment or trading advice, and no representation is made that any strategy will be profitable. Past performance — including every backtest shown here — is not indicative of future results. Cryptocurrency trading involves substantial risk of loss and is not suitable for every investor.',
+      'foot.mission': 'An independent lab building transparent, browser-native tools across SEO, AI, quant and eastern energy. No bloat, no tracking — view-source and verify.',
+      'foot.site': 'This Site', 'foot.network': 'AEOX Network', 'foot.resources': 'Resources',
+      'foot.n1': 'AEOX — AI Answer Engine Diagnostics', 'foot.n2': 'Anchor — Content Automation Engine', 'foot.n3': 'aeox-cli — AI Dev Toolbox', 'foot.n5': 'Chat — Multi-Engine AI Chat', 'foot.n4': 'Shui — Eastern Energy Reports',
+      'foot.r1': 'AEOX resource hub — go.aeox.uk', 'foot.r2': 'Premium suite — coming soon',
+      'foot.disclaimer': 'Disclaimer: Cryptocurrency trading involves substantial risk of loss and is not suitable for every investor. Content on this site is for educational and technical demonstration purposes only and does not constitute financial, investment, or trading advice. Past performance — including all backtests shown here — is not indicative of future results. We are not licensed investment advisors. Always do your own research.',
+      'foot.bottom': '© 2026 AEOX · AEOX Quant — Part of the AEOX network · Data: Binance public API · Charts: TradingView Lightweight Charts · More AEOX resources on <a href="https://go.aeox.uk/" rel="noopener" target="_blank">go.aeox.uk</a> · Premium suite: coming soon',
+      'stack.name': 'QS Stack ({n} indicators)',
+      'stop.label': 'stop', 'stop.adaptive': 'adaptive 2×ATR', 'common.off': 'off',
+      'status.loading': 'Loading market data ({s}, {tf})…',
+      'status.lib': 'Failed to load charting library. Check your network connection and refresh.',
+      'status.failed': 'Failed to fetch data from Binance API ({msg}). Binance may be unavailable in your region — a caching proxy can fix this later.',
+      'status.updated': 'updated', 'status.last': 'last'
+    },
+    zh: {
+      'doc.title': 'AEOX Quant — 加密货币指标仪表盘：Lighthouse 与 QS Confluence + RSI、MACD、布林带、EMA 含止损回测',
+      'nav.dashboard': '仪表盘', 'nav.scan': '扫描中心', 'nav.methodology': '方法论', 'nav.about': '关于', 'nav.faq': '常见问题', 'nav.legal': '法律',
+      'hero.badge': '教学演示 —— 不构成投资建议',
+      'hero.eyebrow': 'AEOX Quant · 原 QuantSignal Lab',
+      'hero.h1': '加密货币指标仪表盘',
+      'hero.subtitle': '实时 K 线图表，可自由切换指标 —— 经典指标之外，还有两件自有指标：<strong style="color:var(--accent)">Lighthouse</strong>（1H 急跌波段扫描器）与 <strong style="color:var(--accent)">QS Confluence</strong>（多因子共振评分），覆盖 BTC、ETH、SOL、BNB 与 XRP。我们的信条：信号廉价，纪律性的退出才是产品。这里的每个回测都带止损与每边 0.1% 手续费 —— 你看到的不只是进场点，还有你会在哪里被止损出局。所有计算都在你的浏览器内基于 Binance 公开数据完成 —— 打开页面源码，逐行验证。',
+      'ctrl.indicators': '指标 <em style="font-style:normal;opacity:.7">(可多选)</em>',
+      'ctrl.stop': '止损', 'ctrl.off': '关闭',
+      'ctrl.exits': '退出工程 <em style="font-style:normal;opacity:.7">(实验性)</em>',
+      'exit.filter': 'Regime 过滤 &gt; -40', 'exit.quick': '快速了结 RSI(14)&gt;70',
+      'ctrl.share': '分享', 'share.copied': '✓ 已复制',
+      'eq.caption': '$100 成长曲线 —— 策略 vs 买入持有（同引擎、含手续费与止损）',
+      'eq.strategy': '策略', 'eq.hold': '持有',
+      'scan.modeCompare': '对比 ({n} 图)',
+      'scan.configCompare': '{name} · {tf} · 止损 {stop} —— 每币一张迷你图，箭头 = 实际成交；点击放大',
+      'scan.noteCompare': '全部 {tf} · 每币 {bars} 根 · 同一引擎（手续费、止损、退出开关）。点击任一卡片载入主图表。',
+      'compare.noTrades': '无平仓交易',
+      'stat.signals': '信号数（1000 根 K 线）', 'stat.trades': '已平仓交易', 'stat.win': '胜率', 'stat.return': '策略收益', 'stat.dd': '最大回撤',
+      'stat.holdPrefix': '对比买入持有：',
+      'stat.tradesSubOpen': '{n} 笔止损 · 1 笔持仓中', 'stat.tradesSubFlat': '{n} 笔止损 · 无持仓',
+      'stat.ddSub': '止损 {stop} · 每边 0.1% 手续费',
+      'scan.h2': '扫描中心 —— 一张表，两种视角',
+      'scan.subtitle': '与上方图表同一套诚实引擎 —— 含手续费与止损、只做多、1000 根 K 线。在<strong>我的配置</strong>（5 币 × 3 周期，点击行加载到图表）与<strong>全指标对比</strong>（按当前周期逐指标单跑、跨币平均）之间切换。',
+      'scan.modeMine': '我的配置（{n} 组）',
+      'scan.modeAll': '全指标对比（{n} × {m}）',
+      'live.caption': '实时信号状态 —— 收盘确认，随指标与周期选择自动更新。',
+      'live.long': '持多',
+      'live.flat': '空仓',
+      'live.buyAgo': 'BUY {n} 根前',
+      'live.sellAgo': 'SELL {n} 根前',
+      'live.stopAgo': 'STOP 止损 {n} 根前',
+      'live.pending': '当前 bar 信号待收盘确认',
+      'live.noSignal': '1000 根内无信号',
+      'live.loading': '加载中…',
+      'live.failed': '数据不可用',
+      'scan.configMine': '{name} · 止损 {stop} · {c} 币 × {tfs}',
+      'scan.configAll': '{tf} 周期 · 止损 {stop} · 每个指标单独运行，{c} 币平均',
+      'scan.emptyStack': '{bars} 根 K 线内没有交易 —— 当前组合非常挑剔。可尝试减少叠加指标、切换 1H 周期（机会更多）或放宽止损。',
+      'scan.scanning': '正在扫描 {n} 组…',
+      'scan.noData': '无法获取行情数据 —— 你所在地区可能无法访问 Binance。',
+      'scan.riskMsg': '{name} 是仓位/过滤工具，不产生入场信号 —— 请在上方切换其他指标查看行情友好度排行。',
+      'scan.riskNote': '该工具不参与回测。引擎参考：只做多、bar 收盘进出场、盘中止损、每边 0.1% 手续费。',
+      'scan.noteMine': '{name} · {rows}/{total} 个组合 · 每对 {bars} 根 K 线 · 止损 {stop} · 每边 0.1% 手续费 · 只做多，按净收益排序。友好度随市场状态轮动 —— 它描述的是近期过去，不是对未来收益的承诺。点击任意一行可在图表中查验。',
+      'scan.noteAll': '{tf} 周期 · 止损 {stop} · 每边 0.1% 手续费 · 每币 {bars} 根 K 线 · 只做多 · 每个指标单独运行，{m} 币平均',
+      'scan.failed': '数据获取失败（{msg}）。请重试或切换周期。',
+      'compare.line': '<strong>组合 vs 单指标 {name}：</strong>交易 {t1} vs {t2} 笔 · 胜率 {w1} vs {w2} · 最大回撤 {d1} vs {d2} · 收益 {r1} vs {r2}',
+      'th.indicator': '指标', 'th.coin': '币种', 'th.tf': '周期', 'th.trades': '笔数', 'th.winRate': '胜率', 'th.edge': '超额', 'th.netReturn': '净收益', 'th.maxDD': '最大回撤', 'th.avgReturn': '平均收益', 'th.avgEdge': '平均超额', 'th.avgWin': '平均胜率', 'th.worstDD': '最差回撤', 'th.totalTrades': '总笔数',
+      'method.h2': '工作原理', 'method.h3a': '信号规则（按指标）', 'method.h3b': '回测与风控规则',
+      'method.lh': '<strong style="color:var(--accent)">Lighthouse（自有）</strong> —— 1H 短线波段扫描器：价格守住 SMA100 趋势守门线时，急跌买入（RSI(4) 下穿 10）；动量修复即卖出（RSI(4) 上穿 70）。基于 1H 数据调优，并在 5 币上完成样本外验证。',
+      'method.qs': '<strong style="color:var(--accent)">QS Confluence v1（自有，β）</strong> —— 0-100 综合评分：RSI 动量（35%）+ 布林 %B 位置（25%）+ EMA20/50 趋势差（15%）+ 资金费率情绪（25%，逆向逻辑：多头越拥挤分数越高）。分数下穿 20 买入；上穿 80 卖出。演示版费率 z-score 使用全部可用历史（存在轻微前视）；TradingView 数据源不提供资金费率，Pine 版运行同样的三个市场因子 —— 与本页"费率不可用"的降级模式完全一致。',
+      'method.regime': '<strong style="color:var(--text)">QS Regime（β）</strong> —— 趋势环境过滤器：EMA50 与 EMA200 的差值归一化到 ±100。高于 +40 = 上行趋势确立（适合趋势跟随），低于 -40 = 下行趋势，中间 = 震荡（适合均值回归）。',
+      'method.flow': '<strong style="color:var(--text)">QS Flow（β）</strong> —— 订单流代理指标：主动买入量占比（EMA14 平滑）+ 成交量扩张（20 根 z-score）。买压上穿 +20 且放量时买入；下穿 -20 卖出。',
+      'method.risk': '<strong style="color:var(--text)">QS Risk（β）—— 我们的止损工程</strong> —— 不是信号：输出随波动率自适应的止损距离（2×ATR14，限制在 2–12%），让止损随市场呼吸，而不是钉在一个固定靶位。太紧会被反复扫损，太宽则浪费风险预算 —— 这个工具负责让等式的亏损端保持诚实。',
+      'method.stack': '<strong style="color:var(--text)">QS Stack（多选组合）</strong> —— 在上方多选指标，即可让它们作为一套系统运行：只有所有选中的信号指标同时看多才入场，任何一个转空即离场。选中 QS Risk 时，止损自动切换为其 2×ATR 自适应距离。',
+      'method.exits': '<strong style="color:var(--accent)">退出工程（实验性开关）</strong> —— 两个可选开关，均在 4 个窗口（牛/熊/深熊，1H 与 4H，约 2.2 万根）上回测验证。<em>Regime 过滤</em>：QS Regime &lt; -40（下行确立）时不开新仓 —— 深熊窗口把 QS Confluence 的亏损从 -18% 压到 -1%、最大回撤降约 16 个百分点；诚实代价是强牛窗口期望略降。-40 阈值拟合自同一批历史深熊数据 —— 请视为防御性护栏，而非对未来极端行情的保证。<em>快速了结</em>：把指标自带卖出统一替换为 RSI(14)&gt;70 —— 胜率大致翻倍（如 Confluence 28%→51-62%），但<strong>不会</strong>提高期望：你买的是胜率，不是钱。两个开关默认关闭。',
+      'method.classics': '<strong style="color:var(--text)">经典指标</strong> —— RSI (14)、MACD (12,26,9)、Bollinger (20, 2σ)、EMA 交叉 (20/50)，教科书标准规则：超卖超买反转、信号线交叉、触轨反向、金叉死叉。',
+      'method.br1': '止损：3% / 5% / 8% 或关闭 —— 盘中按止损价触发。',
+      'method.br2': '手续费：每边 0.1%（Binance 现货 taker），每笔进出都计。永续资金费与滑点未建模 —— 深熊窗口的低个位数百分比优势应视为约等于打平。',
+      'method.br3': '只做多、单仓位、bar 收盘进出场。',
+      'method.br4': '最大回撤按逐笔权益曲线计算。',
+      'method.br5': '全部计算在客户端完成 —— <code>view-source</code> 可自行审计。',
+      'method.br6': '信号与交易是两回事：阈值型指标会连续同向触发（如连续超卖）；引擎只认第一个信号开仓，重复信号自动忽略，图表箭头标注的是实际进出场（STOP = 止损离场）。',
+      'method.br7': '同根 K 线止损与再进场：某根 bar 盘中砸穿止损价、而收盘时买入信号依然成立，引擎会先按止损价离场（盘中触发），再按同一根 bar 的收盘价重新进场 —— 两个箭头落在同一根蜡烛上。止损后没有冷却期，每根 bar 独立评估。',
+      'method.outro': '两件自有指标，两种分工：<strong style="color:var(--accent)">Lighthouse</strong> 专猎趋势确立后的 1H 急跌波段；<strong style="color:var(--accent)">QS Confluence</strong> 要求动量、波动率位置与趋势同时表态才出手。但进场只是容易的那一半 —— 止损把每笔亏损锁死在已知价格，这种"截断左尾"的纪律才是让你留在牌桌上的东西。两者在此均为免费固定的公开版。<strong>付费套件</strong>（AEOX Quant 全部指标打包：ATR 自适应止损、止损提醒、止盈逻辑、可调权重、成交量确认）正在做最后的跨平台对齐验证 —— 验证完成后以单一套餐形式开放购买。本站当前为研究成果展示，暂不出售任何商品。',
+      'guide.h2': '如何使用 —— 实操工作流',
+      'guide.sub': '无论你是在仪表盘上评估这些指标，还是等 Pine 套件开放后进行核对，工作流都是一样的。这个仪表盘就是你的入场前筛选室：先筛选，再验证，最后定风险。',
+      'guide.s1': '<strong>先筛选，再交易。</strong>从上方扫描中心排行开始，在前排名次里挑候选；每周以及每次开新仓前重新扫描 —— 友好度随市场状态轮动。',
+      'guide.s2': '<strong>上图表验证，并尊重样本量。</strong>点击行加载组合，翻看买入/卖出标记，诚实问自己：这些交易我会做吗？低于约 30 笔平仓交易的胜率都应视为统计单薄。',
+      'guide.s3': '<strong>让止损匹配你的风险。</strong>本页所有数字都基于所选止损与每边 0.1% 手续费 —— 费率不同或没有止损，就是另一个更差的策略。用 3% / 8% 重扫看敏感度，或用 QS Risk 的自适应止损。',
+      'guide.s4': '<strong>按回撤定仓位。</strong>最大回撤就是你的风险预算：历史上回撤过 18%，就要假设它可能更狠 —— 仓位以"历史重演也输得起"为标准。',
+      'guide.stacking': '<strong style="color:var(--text)">组合叠加（多选）：</strong>上方指标按钮支持多选。选中多个 —— 比如全部四件 QS 工具 —— 仪表盘会把它们当成一套系统运行：只有<em>所有</em>选中的信号指标同时看多才开仓，任何一个转空立即平仓。代价是交易笔数大幅减少 —— 这正是设计意图：每个指标都有假信号，要求全部一致表态，本质是用交易频率换信号质量，所以评价组合要看回撤与单笔质量，而不是交易笔数。把 QS Risk 加入选择后，止损将从固定 3/5/8% 切换为波动率自适应（2×ATR）。扫描中心会随即为你的整套组合重新排序全部 15 个币种×周期组合。',
+      'guide.pine': '<strong style="color:var(--text)">Pine Script 套件（准备中）：</strong>套件正在与本页对齐 —— 生成的买入/卖出事件与此处一致（同样的数学、同样的阈值；QS Flow 在 TradingView 上使用蜡烛解剖压力代理，因其数据源不提供 taker 数据）。跨平台验证完成后开放购买；在此之前，本仪表盘即参考实现，所有数字均可独立复现。',
+      'about.h2': '关于本项目',
+      'about.p1': 'AEOX Quant（原 QuantSignal Lab）是 AEOX 家族网络中的量化板块 —— 一个独立、build-in-public 的项目，探索透明的加密货币技术分析。我们发布的每一个指标都附带完整可见、可审计的计算逻辑 —— 因为你无法验证的信号只是一个故事。',
+      'about.p2': '本站当前为公开的研究成果展示 —— 仪表盘、完整回测方法论与实验报告全部开放免费查阅，暂不出售任何商品。TradingView Pine Script 套件 —— AEOX Quant 全部指标打包（ATR 自适应止损、止盈逻辑、可调权重、成交量确认、TradingView 提醒）—— 正在做最后的跨平台对齐验证，完成后开放购买，届时经由 <a href="https://go.aeox.uk/" rel="noopener" target="_blank">go.aeox.uk</a> 公告。',
+      'about.cta1': 'AEOX 资源中心 —— go.aeox.uk', 'about.cta2': '付费套件 —— 即将开放',
+      'about.roadmap': '<strong>路线图：</strong>阶段一（当前）—— 公开研究仪表盘：方法论、样本外实验报告与扫描工具全部开放。阶段二（进行中）—— Pine Script v5 跨平台对齐与信号一致性验证。阶段三（后期）—— 付费套件以单一套餐形式开放购买。止盈与追踪止损变体、每日市场扫描报告随后推出。',
+      'faq.h2': '常见问题',
+      'faq.q1': '这是投资建议吗？', 'faq.a1': '不是。本页是指标计算的教学与技术演示。页面上的任何内容都不构成投资建议，历史信号表现也不代表未来结果。',
+      'faq.q2': 'QS Confluence 是什么？', 'faq.a2': 'QS Confluence 是我们的自有 multi-factor 指标：0-100 综合评分，融合 RSI 动量（35%）、布林带位置（25%）、EMA 趋势差（15%）与资金费率情绪（25%，逆向）。可调权重与额外因子的高级版计划包含在 AEOX Quant 全套件中，该套件后期开放购买（本站当前为研究成果展示）。',
+      'faq.q5': 'Lighthouse 是什么？', 'faq.a5': 'Lighthouse 是我们针对 1H 短线波段调优的扫描器：价格守住 SMA100 趋势守门线时买入急跌（RSI(4) 低于 10），动量修复后离场（RSI(4) 高于 70）。它经过 5 币样本外网格验证 —— 详见方法论部分。',
+      'faq.q3': '回测包含手续费和止损吗？', 'faq.a3': '包含。本页每个回测都计入每边 0.1% 的交易手续费，并支持可配置的盘中止损（3%、5%、8% 或关闭）。我们坚信不含手续费与风控的回测结果毫无意义。',
+      'faq.q4': '我能验证指标计算吗？', 'faq.a4': '能。所有指标计算、信号识别与回测逻辑都以 JavaScript 在你的浏览器内运行。打开页面源码，逐行自行验证。',
+      'faq.q6': '为什么信号这么少？', 'faq.a6': '这是设计使然。Lighthouse 要求在上升趋势（价格高于 SMA100）内部出现极端恐慌急跌（RSI(4) 跌破 10）——在 1H 周期上，历史上大约每币每月才出现一次。平稳的趋势段不会产生入场信号，因为没有恐慌可买；下跌趋势也不会产生，因为趋势守卫直接封锁。这种稀缺性正是优势所在，而非缺陷：正确的使用方式是多币扫描（扫描中心）+ 云端 alert，而不是盯着单一图表等。如果一个指标每天都出信号，它卖给你的是动作，不是纪律。',
+      'legal.h2': '法律、隐私与许可',
+      'legal.privacy': '<strong style="color:var(--text)">隐私：</strong>这是一个纯静态页面 —— 无账号、无追踪、无统计脚本。主题与语言偏好只存在你浏览器的 localStorage 里；行情数据由你的浏览器直连 Binance 公开 API 获取，不经过我们的任何服务器。',
+      'legal.license': '<strong style="color:var(--text)">产品许可：</strong>当前没有任何商品在售。付费 Pine Script 套件开放后，将授权给你个人的 TradingView 账户使用；禁止再分发、转售或公开分享脚本。',
+      'legal.refund': '<strong style="color:var(--text)">退款：</strong>当前没有任何商品在售。付费套件开放后，全部商品为即时交付的数字商品 —— 退款条款将在开放购买前发布于商店页面。',
+      'legal.risk': '<strong style="color:var(--text)">风险：</strong>本站任何内容均不构成金融、投资或交易建议，我们也不作任何"策略将盈利"的承诺。历史表现 —— 包括本页展示的所有回测 —— 不代表未来结果。加密货币交易存在重大亏损风险，不适合所有投资者。',
+      'foot.mission': '一个独立实验室，构建横跨 SEO、AI、量化与东方能量的透明浏览器端工具。不臃肿、不追踪 —— view-source 即可验证。',
+      'foot.site': '本站', 'foot.network': 'AEOX 家族网络', 'foot.resources': '资源',
+      'foot.n1': 'AEOX —— AI 答案引擎诊断', 'foot.n2': 'Anchor —— 内容自动化引擎', 'foot.n3': 'aeox-cli —— AI 开发工具箱', 'foot.n5': 'Chat —— 多引擎 AI 聊天', 'foot.n4': 'Shui —— 东方能量报告',
+      'foot.r1': 'AEOX 资源中心 —— go.aeox.uk', 'foot.r2': '付费套件 —— 即将开放',
+      'foot.disclaimer': '免责声明：加密货币交易存在重大亏损风险，不适合所有投资者。本站内容仅用于教学与技术演示，不构成任何金融、投资或交易建议。历史表现（包括本页所有回测）不代表未来结果。我们不是持牌投资顾问。请务必自行研究（DYOR）。',
+      'foot.bottom': '© 2026 AEOX · AEOX Quant —— AEOX 家族网络成员 · 数据：Binance 公开 API · 图表：TradingView Lightweight Charts · 更多 AEOX 资源见 <a href="https://go.aeox.uk/" rel="noopener" target="_blank">go.aeox.uk</a> · 付费套件：即将开放',
+      'stack.name': 'QS 组合（{n} 个指标）',
+      'stop.label': '止损', 'stop.adaptive': '自适应 2×ATR', 'common.off': '关闭',
+      'status.loading': '正在加载行情数据（{s}，{tf}）…',
+      'status.lib': '图表库加载失败，请检查网络后刷新。',
+      'status.failed': 'Binance API 数据获取失败（{msg}）。你所在地区可能无法访问 Binance —— 后续可通过缓存代理解决。',
+      'status.updated': '更新于', 'status.last': '最新价'
+    }
+  };
+
+  function t(key, vars) {
+    var lang = state.lang || 'en';
+    var s = (I18N[lang] && I18N[lang][key] !== undefined) ? I18N[lang][key] : I18N.en[key];
+    if (s === undefined) return key;
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        s = s.split('{' + k + '}').join(String(vars[k]));
+      });
+    }
+    return s;
+  }
+
+  function sigCount() {
+    return Object.keys(INDICATORS).filter(function (k) { return !INDICATORS[k].noBacktest; }).length;
+  }
+
+  function pickLabel(label) {
+    if (label && typeof label === 'object') return state.lang === 'zh' ? label.zh : label.en;
+    return label;
+  }
+
+  function stopDescText() {
+    return state.stop > 0 ? state.stop + '%' : t('common.off');
+  }
+
+  function applyI18n() {
+    var els = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < els.length; i++) {
+      els[i].innerHTML = t(els[i].getAttribute('data-i18n'));
+    }
+    document.documentElement.lang = state.lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = t('doc.title');
+    var lt = document.getElementById('langToggle');
+    if (lt) lt.textContent = state.lang === 'zh' ? 'EN' : '中文';
+    var mm = document.getElementById('scanModeMine');
+    var ma = document.getElementById('scanModeAll');
+    var mc = document.getElementById('scanModeCompare');
+    if (mm) mm.textContent = t('scan.modeMine', { n: COINS.length * TFS.length });
+    if (ma) ma.textContent = t('scan.modeAll', { n: sigCount(), m: COINS.length });
+    if (mc) mc.textContent = t('scan.modeCompare', { n: COINS.length });
+  }
+
+  var COINS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT', 'BNBUSDT', 'XRPUSDT'];
+  var FEE_PCT = 0.1;
+  var BAR_COUNT = 1000;
+
+  var THEMES = {
+    mint: { up: '#3a9d6f', down: '#e5767c', primary: '#3a9d6f', accent2: '#f2994a', text: '#7d9184', grid: 'rgba(58,157,111,0.10)', border: '#dcead9' },
+    sky: { up: '#47ab7e', down: '#ef7b7b', primary: '#4a90d9', accent2: '#7c5cbf', text: '#7e93ad', grid: 'rgba(74,144,217,0.10)', border: '#d9e6f5' },
+    peach: { up: '#4aa391', down: '#e8735a', primary: '#e8735a', accent2: '#5a9e8f', text: '#a08b7c', grid: 'rgba(232,115,90,0.09)', border: '#f0e0d0' },
+    night: { up: '#3fb950', down: '#f85149', primary: '#58a6ff', accent2: '#f0883e', text: '#8b949e', grid: 'rgba(48,54,61,0.5)', border: '#30363d' }
+  };
+
+  var state = { symbol: 'BTCUSDT', interval: '1h', indicators: ['lh'], stop: 5, theme: 'mint', lang: 'en', regimeFilter: false, quickExit: false };
+
+  // URL hash 状态：刷新/分享保持当前分析配置（语言与主题走 localStorage 不进 URL）
+  function applyHash() {
+    if (!location.hash || location.hash.length < 2) return;
+    try {
+      var p = new URLSearchParams(location.hash.slice(1));
+      var sym = p.get('symbol');
+      if (sym && COINS.indexOf(sym) >= 0) state.symbol = sym;
+      var tf = p.get('tf');
+      if (tf && TFS.indexOf(tf) >= 0) state.interval = tf;
+      var ind = p.get('ind');
+      if (ind) {
+        var keys = ind.split(',').filter(function (k) { return INDICATORS[k]; });
+        if (keys.length) state.indicators = keys;
+      }
+      var stop = p.get('stop');
+      if (stop !== null && ['0', '3', '5', '8'].indexOf(stop) >= 0) state.stop = +stop;
+      if (p.get('filter') === '1') state.regimeFilter = true;
+      if (p.get('quick') === '1') state.quickExit = true;
+    } catch (e) { /* bad hash → defaults */ }
+  }
+
+  function syncHash() {
+    var p = new URLSearchParams();
+    p.set('symbol', state.symbol);
+    p.set('tf', state.interval);
+    p.set('ind', state.indicators.join(','));
+    p.set('stop', String(state.stop));
+    if (state.regimeFilter) p.set('filter', '1');
+    if (state.quickExit) p.set('quick', '1');
+    try { history.replaceState(null, '', '#' + p.toString()); } catch (e) {}
+  }
+
+  function syncButtonsFromState() {
+    selectButton('symbolGroup', 'data-symbol', state.symbol);
+    selectButton('intervalGroup', 'data-interval', state.interval);
+    selectButton('stopGroup', 'data-stop', String(state.stop));
+    var btns = document.querySelectorAll('#indicatorGroup button[data-indicator]');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].classList.toggle('active', state.indicators.indexOf(btns[i].getAttribute('data-indicator')) >= 0);
+    }
+    var fbtn = document.querySelector('#exitGroup button[data-exit="filter"]');
+    var qbtn = document.querySelector('#exitGroup button[data-exit="quick"]');
+    if (fbtn) fbtn.classList.toggle('active', state.regimeFilter);
+    if (qbtn) qbtn.classList.toggle('active', state.quickExit);
+  }
+  try {
+    var saved = localStorage.getItem('qs-theme');
+    if (saved && THEMES[saved]) state.theme = saved;
+    if (localStorage.getItem('qs-lang') === 'zh') state.lang = 'zh';
+  } catch (e) {}
+
+  var candleCache = {};
+  var candleCacheAt = {};
+  var CANDLE_TTL = 5 * 60 * 1000;
+  var priceChart = null, indChart = null, eqChart = null, candleSeries = null, volSeries = null, eqSeriesLine = null, holdSeriesLine = null;
+  var paneSeriesList = [], overlaySeriesList = [];
+  var syncing = false;
+  var statusEl = document.getElementById('status');
+  var lastStopDesc = '';
+
+  function theme() { return THEMES[state.theme]; }
+
+  function alpha(hex, a) { return hex + a; }
+
+  function setStatus(msg, isError) {
+    statusEl.textContent = msg;
+    statusEl.className = isError ? 'status error' : 'status';
+  }
+
+  function fetchKlines(symbol, interval) {
+    var hosts = ['https://api.binance.com', 'https://data-api.binance.vision'];
+    var promise = Promise.reject(new Error('start'));
+    hosts.forEach(function (host) {
+      promise = promise.catch(function () {
+        return fetch(host + '/api/v3/klines?symbol=' + symbol + '&interval=' + interval + '&limit=' + BAR_COUNT)
+          .then(function (res) {
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            return res.json();
+          });
+      });
+    });
+    return promise;
+  }
+
+  function round2(v) { return Math.round(v * 100) / 100; }
+
+  var fundingCache = {};
+
+  function loadFunding(symbol) {
+    if (fundingCache[symbol] !== undefined) return Promise.resolve(fundingCache[symbol]);
+    return fetch('https://fapi.binance.com/fapi/v1/fundingRate?symbol=' + symbol + '&limit=1000')
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function (rows) {
+        var out = rows.map(function (r) { return { time: Math.floor(r.fundingTime / 1000), rate: +r.fundingRate }; });
+        out.sort(function (a, b) { return a.time - b.time; });
+        fundingCache[symbol] = out;
+        return out;
+      })
+      .catch(function () {
+        fundingCache[symbol] = null;
+        return null;
+      });
+  }
+
+  function makeCtx(symbol) {
+    return { symbol: symbol, funding: fundingCache[symbol] || null };
+  }
+
+  function fundingComponent(candles, funding) {
+    var out = new Array(candles.length).fill(50);
+    if (!funding || funding.length < 30) return out;
+    var mean = 0;
+    for (var j = 0; j < funding.length; j++) mean += funding[j].rate;
+    mean /= funding.length;
+    var vSum = 0;
+    for (var j2 = 0; j2 < funding.length; j2++) vSum += (funding[j2].rate - mean) * (funding[j2].rate - mean);
+    var sd = Math.sqrt(vSum / funding.length);
+    if (sd <= 0) return out;
+    var fi = 0;
+    for (var i = 0; i < candles.length; i++) {
+      while (fi < funding.length - 1 && funding[fi + 1].time <= candles[i].time) fi++;
+      if (funding[fi].time > candles[i].time) continue;
+      out[i] = clamp(50 + ((funding[fi].rate - mean) / sd) * 15, 0, 100);
+    }
+    return out;
+  }
+
+  function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+
+  function closes(candles) {
+    return candles.map(function (c) { return c.close; });
+  }
+
+  function sma(values, period) {
+    var out = new Array(values.length).fill(null);
+    var sum = 0;
+    for (var i = 0; i < values.length; i++) {
+      sum += values[i];
+      if (i >= period) sum -= values[i - period];
+      if (i >= period - 1) out[i] = sum / period;
+    }
+    return out;
+  }
+
+  function ema(values, period) {
+    var out = new Array(values.length).fill(null);
+    var k = 2 / (period + 1);
+    var prev = 0;
+    for (var i = 0; i < values.length; i++) {
+      if (i < period - 1) { prev += values[i]; continue; }
+      if (i === period - 1) { prev = (prev + values[i]) / period; out[i] = prev; continue; }
+      prev = values[i] * k + prev * (1 - k);
+      out[i] = prev;
+    }
+    return out;
+  }
+
+  function emaSkipNull(values, period) {
+    var out = new Array(values.length).fill(null);
+    var k = 2 / (period + 1);
+    var prev = 0, count = 0;
+    for (var i = 0; i < values.length; i++) {
+      if (values[i] === null) continue;
+      count++;
+      if (count < period) { prev += values[i]; continue; }
+      if (count === period) { prev = (prev + values[i]) / period; out[i] = prev; continue; }
+      prev = values[i] * k + prev * (1 - k);
+      out[i] = prev;
+    }
+    return out;
+  }
+
+  function stdev(values, period) {
+    var out = new Array(values.length).fill(null);
+    for (var i = period - 1; i < values.length; i++) {
+      var mean = 0;
+      for (var j = i - period + 1; j <= i; j++) mean += values[j];
+      mean /= period;
+      var v = 0;
+      for (var j2 = i - period + 1; j2 <= i; j2++) v += (values[j2] - mean) * (values[j2] - mean);
+      out[i] = Math.sqrt(v / period);
+    }
+    return out;
+  }
+
+  function calcRSI(values, period) {
+    var out = new Array(values.length).fill(null);
+    var avgG = 0, avgL = 0;
+    for (var i = 1; i < values.length; i++) {
+      var ch = values[i] - values[i - 1];
+      var g = ch > 0 ? ch : 0;
+      var l = ch < 0 ? -ch : 0;
+      if (i <= period) {
+        avgG += g / period;
+        avgL += l / period;
+        if (i === period) out[i] = avgL === 0 ? 100 : 100 - 100 / (1 + avgG / avgL);
+      } else {
+        avgG = (avgG * (period - 1) + g) / period;
+        avgL = (avgL * (period - 1) + l) / period;
+        out[i] = avgL === 0 ? 100 : 100 - 100 / (1 + avgG / avgL);
+      }
+    }
+    return out;
+  }
+
+  function backtest(candles, events, stopPct) {
+    var fee = FEE_PCT / 100;
+    var trades = [], pos = null;
+    var eq = 1, peak = 1, maxDD = 0;
+    var evIdx = 0;
+    var eqSeries = new Array(candles.length);
+    var basePrice = candles[0].close;
+
+    function closeTrade(exitPrice, stopped, exitTime) {
+      var r = (exitPrice * (1 - fee)) / (pos.entry * (1 + fee));
+      eq *= r;
+      if (eq > peak) peak = eq;
+      var dd = (peak - eq) / peak;
+      if (dd > maxDD) maxDD = dd;
+      trades.push({ ret: r, stopped: stopped, entryTime: pos.entryTime, exitTime: exitTime });
+      pos = null;
+    }
+
+    for (var i = 0; i < candles.length; i++) {
+      var bar = candles[i];
+      if (pos !== null && pos.stop !== null && bar.low <= pos.stop) {
+        closeTrade(pos.stop, true, bar.time);
+      }
+      while (evIdx < events.length && events[evIdx].index === i) {
+        var ev = events[evIdx];
+        if (ev.dir === 'buy' && pos === null) {
+          var sp = typeof stopPct === 'number' ? stopPct : (stopPct[i] || 0);
+          pos = { entry: bar.close, stop: sp > 0 ? bar.close * (1 - sp / 100) : null, entryTime: bar.time };
+        } else if (ev.dir === 'sell' && pos !== null) {
+          closeTrade(bar.close, false, bar.time);
+        }
+        evIdx++;
+      }
+      eqSeries[i] = { time: bar.time, eq: pos !== null ? eq * (bar.close * (1 - fee)) / (pos.entry * (1 + fee)) : eq };
+    }
+
+    var wins = trades.filter(function (t) { return t.ret > 1; }).length;
+    var stopped = trades.filter(function (t) { return t.stopped; }).length;
+    var holdRet = (candles[candles.length - 1].close / candles[0].close - 1) * 100;
+    var tradeEvents = [];
+    trades.forEach(function (tr) {
+      tradeEvents.push({ time: tr.entryTime, dir: 'buy' });
+      tradeEvents.push({ time: tr.exitTime, dir: 'sell', stopped: tr.stopped });
+    });
+    if (pos !== null) tradeEvents.push({ time: pos.entryTime, dir: 'buy' });
+    return {
+      signals: events.length,
+      closed: trades.length,
+      open: pos !== null,
+      stopped: stopped,
+      winRate: trades.length ? wins / trades.length * 100 : 0,
+      strategyRet: (eq - 1) * 100,
+      holdRet: holdRet,
+      maxDD: maxDD * 100,
+      tradeEvents: tradeEvents,
+      eqSeries: eqSeries,
+      basePrice: basePrice
+    };
+  }
+
+  function longStates(candles, events) {
+    var out = new Array(candles.length).fill(false);
+    var evIdx = 0, pos = false;
+    for (var i = 0; i < candles.length; i++) {
+      while (evIdx < events.length && events[evIdx].index === i) {
+        var ev = events[evIdx];
+        if (ev.dir === 'buy') pos = true;
+        else if (ev.dir === 'sell') pos = false;
+        evIdx++;
+      }
+      out[i] = pos;
+    }
+    return out;
+  }
+
+  function combinedEvents(candles, statesList) {
+    var events = [];
+    if (!statesList.length) return events;
+    var prevAll = false;
+    for (var i = 0; i < candles.length; i++) {
+      var all = true;
+      for (var k = 0; k < statesList.length; k++) {
+        if (!statesList[k][i]) { all = false; break; }
+      }
+      if (all && !prevAll) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+      else if (!all && prevAll) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+      prevAll = all;
+    }
+    return events;
+  }
+
+  function riskStopSeries(candles) {
+    var out = new Array(candles.length).fill(0);
+    for (var i = 14; i < candles.length; i++) {
+      var trSum = 0;
+      for (var j = i - 13; j <= i; j++) {
+        var pc = candles[j - 1].close;
+        trSum += Math.max(candles[j].high - candles[j].low, Math.abs(candles[j].high - pc), Math.abs(candles[j].low - pc));
+      }
+      out[i] = clamp((trSum / 14) / candles[i].close * 100 * 2, 2, 12);
+    }
+    return out;
+  }
+
+  function regimeSeries(candles) {
+    var c = closes(candles);
+    var e50 = ema(c, 50), e200 = ema(c, 200);
+    var out = new Array(candles.length).fill(null);
+    for (var i = 0; i < candles.length; i++) {
+      if (e50[i] !== null && e200[i] !== null) out[i] = clamp(((e50[i] - e200[i]) / e200[i]) * 3000, -100, 100);
+    }
+    return out;
+  }
+
+  // 退出工程开关（实验性，lab/regime-filter.mjs + lab/exit-swap.mjs 验证）：
+  // regimeFilter：Regime <= -40（下行确立）时不开新仓（已持仓照常按信号/止损退出）
+  // quickExit：把各指标自带 SELL 统一替换为 RSI(14) 上穿 70
+  function applyExitMods(candles, events) {
+    if (!state.regimeFilter && !state.quickExit) return events;
+    var out = events;
+    if (state.regimeFilter) {
+      var reg = regimeSeries(candles);
+      out = out.filter(function (ev) { return ev.dir !== 'buy' || reg[ev.index] === null || reg[ev.index] > -40; });
+    }
+    if (state.quickExit) {
+      var r14 = calcRSI(closes(candles), 14);
+      var sells = [];
+      for (var i = 1; i < candles.length; i++) {
+        if (r14[i] !== null && r14[i - 1] !== null && r14[i - 1] <= 70 && r14[i] > 70) {
+          sells.push({ time: candles[i].time, index: i, dir: 'sell' });
+        }
+      }
+      out = sells.concat(out.filter(function (ev) { return ev.dir !== 'sell'; }));
+      out.sort(function (a, b) { return a.index - b.index; });
+    }
+    return out;
+  }
+
+  function stackLabel(keys) {
+    if (keys.length === 1) return INDICATORS[keys[0]].name;
+    return t('stack.name', { n: keys.length });
+  }
+
+  function buildStackModel(candles, ctx, keys) {
+    if (keys.length === 1) {
+      var def = INDICATORS[keys[0]];
+      var m = def.compute(candles, ctx);
+      m.name = def.name;
+      m.statLabel = def.statLabel;
+      m.stopSeries = null;
+      return m;
+    }
+    var sigKeys = keys.filter(function (k) { return !INDICATORS[k].noBacktest; });
+    var states = sigKeys.map(function (k) {
+      var mm = INDICATORS[k].compute(candles, ctx);
+      return longStates(candles, mm.events);
+    });
+    return {
+      pane: [],
+      overlay: [],
+      events: combinedEvents(candles, states),
+      name: stackLabel(keys),
+      statLabel: {
+        en: sigKeys.length + '-indicator alignment: enter when all are long, exit when any turns',
+        zh: sigKeys.length + ' 个指标共振：全部看多才入场，任一转空即离场'
+      },
+      stopSeries: keys.indexOf('risk') >= 0 ? riskStopSeries(candles) : null
+    };
+  }
+
+  var INDICATORS = {
+    lh: {
+      name: 'Lighthouse',
+      type: 'pane',
+      statLabel: { en: 'RSI(4)<10 & price>SMA100 → buy · RSI(4)>70 → sell', zh: 'RSI(4)<10 且价格>SMA100 买入 · RSI(4)>70 卖出' },
+      fixedScale: { min: 0, max: 100 },
+      compute: function (candles) {
+        var t = theme();
+        var c = closes(candles);
+        var r4 = calcRSI(c, 4), s100 = sma(c, 100);
+        var line = [], guardLine = [], events = [];
+        var prevIn = null, prevOut = null;
+        for (var i = 0; i < candles.length; i++) {
+          if (r4[i] === null || s100[i] === null) { prevIn = null; prevOut = null; continue; }
+          line.push({ time: candles[i].time, value: round2(r4[i]) });
+          guardLine.push({ time: candles[i].time, value: round2(s100[i]) });
+          var inZone = r4[i] < 10 && c[i] > s100[i];
+          var outZone = r4[i] > 70;
+          if (prevIn !== null) {
+            if (!prevIn && inZone) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+            else if (!prevOut && outZone) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+          }
+          prevIn = inZone; prevOut = outZone;
+        }
+        return {
+          pane: [{
+            kind: 'line', color: t.primary, data: line,
+            priceLines: [{ price: 70, color: t.down }, { price: 10, color: t.up }]
+          }],
+          overlay: [{ kind: 'line', color: t.text, data: guardLine }],
+          events: events
+        };
+      }
+    },
+    qs: {
+      name: 'QS Confluence v1 (β)',
+      type: 'pane',
+      statLabel: { en: 'score < 20 → buy, > 80 → sell', zh: '分数 < 20 买入 · > 80 卖出' },
+      fixedScale: { min: 0, max: 100 },
+      compute: function (candles, ctx) {
+        var t = theme();
+        var c = closes(candles);
+        var rsi = calcRSI(c, 14);
+        var mid = sma(c, 20), sd = stdev(c, 20);
+        var e20 = ema(c, 20), e50 = ema(c, 50);
+        var fund = fundingComponent(candles, ctx && ctx.funding);
+        var line = [], events = [];
+        var prevScore = null;
+        for (var i = 0; i < candles.length; i++) {
+          if (rsi[i] === null || mid[i] === null || e20[i] === null || e50[i] === null) { prevScore = null; continue; }
+          var bandW = 4 * sd[i];
+          var pctb = bandW > 0 ? ((c[i] - (mid[i] - 2 * sd[i])) / bandW) * 100 : 50;
+          var emaC = clamp(((e20[i] - e50[i]) / e50[i]) * 5000, -100, 100);
+          var score = 0.35 * rsi[i] + 0.25 * pctb + 0.15 * emaC + 0.25 * fund[i];
+          line.push({ time: candles[i].time, value: round2(clamp(score, 0, 100)) });
+          if (prevScore !== null) {
+            if (prevScore >= 20 && score < 20) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+            else if (prevScore <= 80 && score > 80) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+          }
+          prevScore = score;
+        }
+        return {
+          pane: [{
+            kind: 'line', color: t.primary, data: line,
+            priceLines: [{ price: 80, color: t.down }, { price: 50, color: t.text }, { price: 20, color: t.up }]
+          }],
+          overlay: [],
+          events: events
+        };
+      }
+    },
+    rsi: {
+      name: 'RSI (14)',
+      type: 'pane',
+      statLabel: { en: 'buy oversold → sell overbought', zh: '超卖买入 · 超买卖出' },
+      fixedScale: { min: 0, max: 100 },
+      compute: function (candles) {
+        var t = theme();
+        var rsi = calcRSI(closes(candles), 14);
+        var line = [], events = [];
+        for (var i = 0; i < candles.length; i++) {
+          if (rsi[i] === null) continue;
+          line.push({ time: candles[i].time, value: round2(rsi[i]) });
+          if (i > 0 && rsi[i - 1] !== null) {
+            if (rsi[i - 1] >= 30 && rsi[i] < 30) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+            else if (rsi[i - 1] <= 70 && rsi[i] > 70) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+          }
+        }
+        return {
+          pane: [{ kind: 'line', color: t.primary, data: line, priceLines: [{ price: 70, color: t.down }, { price: 30, color: t.up }] }],
+          overlay: [],
+          events: events
+        };
+      }
+    },
+    macd: {
+      name: 'MACD (12,26,9)',
+      type: 'pane',
+      statLabel: { en: 'MACD/signal crossover', zh: 'MACD/信号线交叉' },
+      compute: function (candles) {
+        var t = theme();
+        var c = closes(candles);
+        var e12 = ema(c, 12), e26 = ema(c, 26);
+        var macd = c.map(function (_, i) { return (e12[i] !== null && e26[i] !== null) ? e12[i] - e26[i] : null; });
+        var signal = emaSkipNull(macd, 9);
+        var macdLine = [], signalLine = [], hist = [], events = [];
+        for (var i = 0; i < candles.length; i++) {
+          if (macd[i] === null || signal[i] === null) continue;
+          macdLine.push({ time: candles[i].time, value: round2(macd[i]) });
+          signalLine.push({ time: candles[i].time, value: round2(signal[i]) });
+          var h = macd[i] - signal[i];
+          hist.push({ time: candles[i].time, value: round2(h), color: h >= 0 ? alpha(t.up, '99') : alpha(t.down, '99') });
+          if (macd[i - 1] !== null && signal[i - 1] !== null) {
+            if (macd[i - 1] <= signal[i - 1] && macd[i] > signal[i]) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+            else if (macd[i - 1] >= signal[i - 1] && macd[i] < signal[i]) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+          }
+        }
+        return {
+          pane: [
+            { kind: 'histogram', data: hist },
+            { kind: 'line', color: t.primary, data: macdLine },
+            { kind: 'line', color: t.accent2, data: signalLine }
+          ],
+          overlay: [],
+          events: events
+        };
+      }
+    },
+    bb: {
+      name: 'Bollinger (20, 2σ)',
+      type: 'overlay',
+      statLabel: { en: 'buy lower band → sell upper band', zh: '下轨买入 · 上轨卖出' },
+      compute: function (candles) {
+        var t = theme();
+        var c = closes(candles);
+        var mid = sma(c, 20), sd = stdev(c, 20);
+        var midData = [], upData = [], loData = [], events = [];
+        for (var i = 0; i < candles.length; i++) {
+          if (mid[i] === null) continue;
+          var up = mid[i] + 2 * sd[i], lo = mid[i] - 2 * sd[i];
+          midData.push({ time: candles[i].time, value: round2(mid[i]) });
+          upData.push({ time: candles[i].time, value: round2(up) });
+          loData.push({ time: candles[i].time, value: round2(lo) });
+          if (i > 0 && mid[i - 1] !== null) {
+            if (c[i - 1] >= (mid[i - 1] - 2 * sd[i - 1]) && c[i] < lo) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+            else if (c[i - 1] <= (mid[i - 1] + 2 * sd[i - 1]) && c[i] > up) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+          }
+        }
+        return {
+          pane: [],
+          overlay: [
+            { kind: 'line', color: t.text, data: midData },
+            { kind: 'line', color: t.accent2, data: upData },
+            { kind: 'line', color: t.accent2, data: loData }
+          ],
+          events: events
+        };
+      }
+    },
+    emaCross: {
+      name: 'EMA Cross (20/50)',
+      type: 'overlay',
+      statLabel: { en: 'EMA20/50 golden & death cross', zh: 'EMA20/50 金叉与死叉' },
+      compute: function (candles) {
+        var t = theme();
+        var c = closes(candles);
+        var e20 = ema(c, 20), e50 = ema(c, 50);
+        var fast = [], slow = [], events = [];
+        for (var i = 0; i < candles.length; i++) {
+          if (e20[i] === null || e50[i] === null) continue;
+          fast.push({ time: candles[i].time, value: round2(e20[i]) });
+          slow.push({ time: candles[i].time, value: round2(e50[i]) });
+          if (e20[i - 1] !== null && e50[i - 1] !== null) {
+            if (e20[i - 1] <= e50[i - 1] && e20[i] > e50[i]) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+            else if (e20[i - 1] >= e50[i - 1] && e20[i] < e50[i]) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+          }
+        }
+        return {
+          pane: [],
+          overlay: [
+            { kind: 'line', color: t.primary, data: fast },
+            { kind: 'line', color: t.accent2, data: slow }
+          ],
+          events: events
+        };
+      }
+    },
+    regime: {
+      name: 'QS Regime (β)',
+      type: 'pane',
+      statLabel: { en: 'score > 40 uptrend · < -40 downtrend · between = ranging', zh: '> 40 上行趋势 · < -40 下行趋势 · 之间为震荡' },
+      compute: function (candles, ctx) {
+        var t = theme();
+        var c = closes(candles);
+        var e50 = ema(c, 50), e200 = ema(c, 200);
+        var line = [], events = [];
+        var prev = null;
+        for (var i = 0; i < candles.length; i++) {
+          if (e50[i] === null || e200[i] === null) { prev = null; continue; }
+          var v = clamp(((e50[i] - e200[i]) / e200[i]) * 3000, -100, 100);
+          line.push({ time: candles[i].time, value: round2(v) });
+          if (prev !== null) {
+            if (prev <= 40 && v > 40) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+            else if (prev >= -40 && v < -40) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+          }
+          prev = v;
+        }
+        return {
+          pane: [{
+            kind: 'line', color: t.accent2, data: line,
+            priceLines: [{ price: 40, color: t.up }, { price: 0, color: t.text }, { price: -40, color: t.down }]
+          }],
+          overlay: [],
+          events: events
+        };
+      }
+    },
+    flow: {
+      name: 'QS Flow (β)',
+      type: 'pane',
+      statLabel: { en: 'buy on pressure surge + volume expansion', zh: '买压激增且放量时买入' },
+      compute: function (candles, ctx) {
+        var t = theme();
+        var ratio = candles.map(function (k) { return k.volume > 0 ? k.tb / k.volume : 0.5; });
+        var smooth = ema(ratio, 14);
+        var vols = candles.map(function (k) { return k.volume; });
+        var vAvg = sma(vols, 20), vSd = stdev(vols, 20);
+        var line = [], events = [];
+        var prev = null;
+        for (var i = 0; i < candles.length; i++) {
+          if (smooth[i] === null || vAvg[i] === null || vSd[i] === null) { prev = null; continue; }
+          var v = clamp((smooth[i] - 0.5) * 400, -100, 100);
+          line.push({ time: candles[i].time, value: round2(v) });
+          var vz = vSd[i] > 0 ? (vols[i] - vAvg[i]) / vSd[i] : 0;
+          if (prev !== null) {
+            if (prev <= 20 && v > 20 && vz > 0.5) events.push({ time: candles[i].time, index: i, dir: 'buy' });
+            else if (prev >= -20 && v < -20) events.push({ time: candles[i].time, index: i, dir: 'sell' });
+          }
+          prev = v;
+        }
+        return {
+          pane: [{
+            kind: 'line', color: t.primary, data: line,
+            priceLines: [{ price: 20, color: t.up }, { price: 0, color: t.text }, { price: -20, color: t.down }]
+          }],
+          overlay: [],
+          events: events
+        };
+      }
+    },
+    risk: {
+      name: 'QS Risk (β)',
+      type: 'pane',
+      statLabel: { en: 'suggested stop % = 2×ATR(14), volatility-adaptive', zh: '建议止损 % = 2×ATR(14)，波动率自适应' },
+      noBacktest: true,
+      compute: function (candles, ctx) {
+        var t = theme();
+        var stops = riskStopSeries(candles);
+        var line = [];
+        for (var i = 0; i < candles.length; i++) {
+          if (stops[i] <= 0) continue;
+          line.push({ time: candles[i].time, value: round2(stops[i]) });
+        }
+        return {
+          pane: [{ kind: 'line', color: t.accent2, data: line, priceLines: [{ price: 5, color: t.text }] }],
+          overlay: [],
+          events: []
+        };
+      }
+    }
+  };
+
+  function toMarkers(events) {
+    var t = theme();
+    return events.map(function (ev) {
+      return ev.dir === 'buy'
+        ? { time: ev.time, position: 'belowBar', color: t.up, shape: 'arrowUp', text: 'BUY' }
+        : { time: ev.time, position: 'aboveBar', color: t.down, shape: 'arrowDown', text: ev.stopped ? 'STOP' : 'SELL' };
+    });
+  }
+
+  function fmtPct(v) { return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+
+  function fmtPct1(v) { return (v >= 0 ? '+' : '') + v.toFixed(1) + '%'; }
+
+  function renderStats(s, label) {
+    document.getElementById('statSignals').textContent = s.signals;
+    document.getElementById('statSignalsSub').textContent = state.symbol.replace('USDT', '') + ' · ' + state.interval;
+    document.getElementById('statTrades').textContent = s.closed;
+    document.getElementById('statTradesSub').textContent = t(s.open ? 'stat.tradesSubOpen' : 'stat.tradesSubFlat', { n: s.stopped });
+    document.getElementById('statWinRate').textContent = s.closed ? s.winRate.toFixed(1) + '%' : '—';
+    document.getElementById('statWinSub').textContent = pickLabel(label);
+    var retEl = document.getElementById('statReturn');
+    retEl.textContent = s.closed ? fmtPct(s.strategyRet) : '—';
+    retEl.className = 'value ' + (s.strategyRet >= 0 ? 'pos' : 'neg');
+    var holdEl = document.getElementById('statHold');
+    holdEl.innerHTML = t('stat.holdPrefix') + '<span class="' + (s.holdRet >= 0 ? 'pos' : 'neg') + '">' + fmtPct(s.holdRet) + '</span>';
+    var ddEl = document.getElementById('statDD');
+    ddEl.textContent = '-' + s.maxDD.toFixed(1) + '%';
+    ddEl.className = 'value neg';
+    document.getElementById('statDdSub').textContent = t('stat.ddSub', { stop: lastStopDesc });
+  }
+
+  function chartOptions() {
+    var t = theme();
+    return {
+      autoSize: true,
+      layout: { background: { color: 'transparent' }, textColor: t.text },
+      grid: { vertLines: { color: t.grid }, horzLines: { color: t.grid } },
+      timeScale: { timeVisible: true, secondsVisible: false, borderColor: t.border },
+      rightPriceScale: { borderColor: t.border },
+      crosshair: { mode: 0 }
+    };
+  }
+
+  function initCharts() {
+    priceChart = LightweightCharts.createChart(document.getElementById('priceChart'), chartOptions());
+    candleSeries = priceChart.addCandlestickSeries({
+      upColor: theme().up, downColor: theme().down,
+      borderUpColor: theme().up, borderDownColor: theme().down,
+      wickUpColor: theme().up, wickDownColor: theme().down
+    });
+    volSeries = priceChart.addHistogramSeries({ priceScaleId: 'vol', priceFormat: { type: 'volume' } });
+    volSeries.priceScale().applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
+
+    indChart = LightweightCharts.createChart(document.getElementById('indChart'), chartOptions());
+
+    eqChart = LightweightCharts.createChart(document.getElementById('eqChart'), chartOptions());
+    eqSeriesLine = eqChart.addLineSeries({ color: theme().accent2 || theme().up, lineWidth: 2, title: 'Strategy' });
+    holdSeriesLine = eqChart.addLineSeries({ color: theme().muted || theme().text, lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dashed, title: 'Hold' });
+
+    var syncTargets = [priceChart, indChart, eqChart];
+    syncTargets.forEach(function (src) {
+      src.timeScale().subscribeVisibleLogicalRangeChange(function (range) {
+        if (syncing || !range) return;
+        syncing = true;
+        syncTargets.forEach(function (dst) {
+          if (dst !== src) dst.timeScale().setVisibleLogicalRange(range);
+        });
+        syncing = false;
+      });
+    });
+  }
+
+  function clearDynamicSeries() {
+    overlaySeriesList.forEach(function (s) { priceChart.removeSeries(s); });
+    overlaySeriesList = [];
+    paneSeriesList.forEach(function (s) { indChart.removeSeries(s); });
+    paneSeriesList = [];
+  }
+
+  function applyPane(def, model) {
+    var wrap = document.getElementById('indWrap');
+    if (def.type !== 'pane' || model.pane.length === 0) {
+      wrap.style.display = 'none';
+      return;
+    }
+    wrap.style.display = '';
+    if (def.fixedScale) {
+      indChart.applyOptions({ rightPriceScale: { autoScale: false, scaleMargins: { top: 0.1, bottom: 0.1 } } });
+    } else {
+      indChart.applyOptions({ rightPriceScale: { autoScale: true } });
+    }
+    model.pane.forEach(function (spec) {
+      var s;
+      if (spec.kind === 'histogram') {
+        s = indChart.addHistogramSeries({});
+      } else {
+        s = indChart.addLineSeries({ color: spec.color, lineWidth: 2 });
+        if (def.fixedScale) {
+          s.applyOptions({ autoscaleInfoProvider: function () { return { priceRange: { minValue: def.fixedScale.min, maxValue: def.fixedScale.max } }; } });
+        }
+        if (spec.priceLines) {
+          spec.priceLines.forEach(function (pl) {
+            s.createPriceLine({ price: pl.price, color: pl.color, lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dashed, title: String(pl.price) });
+          });
+        }
+      }
+      s.setData(spec.data);
+      paneSeriesList.push(s);
+    });
+  }
+
+  function applyOverlay(model) {
+    model.overlay.forEach(function (spec) {
+      var s = priceChart.addLineSeries({ color: spec.color, lineWidth: 2, priceLineVisible: false, lastValueVisible: false });
+      s.setData(spec.data);
+      overlaySeriesList.push(s);
+    });
+  }
+
+  function applyModel(candleModel) {
+    var th = theme();
+    var keys = state.indicators;
+    var stack = buildStackModel(candleModel.candles, makeCtx(state.symbol), keys);
+    var primaryDef = INDICATORS[keys[0]];
+    var paneModel = stack;
+    if (keys.length > 1 && primaryDef.type === 'pane' && !primaryDef.noBacktest) {
+      paneModel = primaryDef.compute(candleModel.candles, makeCtx(state.symbol));
+    }
+    candleSeries.applyOptions({
+      upColor: th.up, downColor: th.down,
+      borderUpColor: th.up, borderDownColor: th.down,
+      wickUpColor: th.up, wickDownColor: th.down
+    });
+    candleSeries.setData(candleModel.candles);
+    var modEvents = applyExitMods(candleModel.candles, stack.events);
+    var stats = backtest(candleModel.candles, modEvents, stack.stopSeries || state.stop);
+    candleSeries.setMarkers(toMarkers(stats.tradeEvents));
+    eqSeriesLine.applyOptions({ color: th.accent2, title: t('eq.strategy') });
+    holdSeriesLine.applyOptions({ color: th.text, title: t('eq.hold') });
+    eqSeriesLine.setData(stats.eqSeries.map(function (p) { return { time: p.time, value: p.eq * 100 }; }));
+    holdSeriesLine.setData(candleModel.candles.map(function (c) { return { time: c.time, value: c.close / stats.basePrice * 100 }; }));
+    volSeries.setData(candleModel.volumes.map(function (v) {
+      return { time: v.time, value: v.value, color: v.up ? alpha(th.up, '40') : alpha(th.down, '40') };
+    }));
+    clearDynamicSeries();
+    applyOverlay(paneModel);
+    applyPane(primaryDef, paneModel);
+    var stopDesc = stack.stopSeries ? t('stop.adaptive') : stopDescText();
+    lastStopDesc = stopDesc;
+    renderStats(stats, stack.statLabel);
+    var cmpEl = document.getElementById('stackCompare');
+    if (cmpEl) {
+      var soloKey = keys.length > 1 ? keys.filter(function (k) { return !INDICATORS[k].noBacktest; })[0] : null;
+      if (soloKey) {
+        var soloModel = INDICATORS[soloKey].compute(candleModel.candles, makeCtx(state.symbol));
+        var solo = backtest(candleModel.candles, applyExitMods(candleModel.candles, soloModel.events), state.stop);
+        cmpEl.style.display = '';
+        cmpEl.innerHTML = t('compare.line', {
+          name: INDICATORS[soloKey].name,
+          t1: stats.closed, t2: solo.closed,
+          w1: stats.closed ? stats.winRate.toFixed(1) + '%' : '—',
+          w2: solo.closed ? solo.winRate.toFixed(1) + '%' : '—',
+          d1: '-' + stats.maxDD.toFixed(1) + '%', d2: '-' + solo.maxDD.toFixed(1) + '%',
+          r1: stats.closed ? fmtPct(stats.strategyRet) : '—',
+          r2: solo.closed ? fmtPct(solo.strategyRet) : '—'
+        });
+      } else {
+        cmpEl.style.display = 'none';
+      }
+    }
+    var last = candleModel.candles[candleModel.candles.length - 1];
+    setStatus(stack.name + ' · ' + state.symbol + ' · ' + state.interval + ' · ' + t('stop.label') + ' ' + stopDesc + ' · ' + t('status.updated') + ' ' + new Date().toLocaleTimeString() + ' · ' + t('status.last') + ': $' + last.close.toLocaleString());
+  }
+
+  function buildCandleModel(raw) {
+    var candles = [], volumes = [];
+    for (var i = 0; i < raw.length; i++) {
+      var k = raw[i];
+      var c = { time: Math.floor(k[0] / 1000), open: +k[1], high: +k[2], low: +k[3], close: +k[4], volume: +k[5], tb: +k[9] };
+      candles.push(c);
+      volumes.push({ time: c.time, value: +k[5], up: c.close >= c.open });
+    }
+    return { candles: candles, volumes: volumes };
+  }
+
+  function currentKey() { return state.symbol + '_' + state.interval; }
+
+  function loadCandles(symbol, interval) {
+    var key = symbol + '_' + interval;
+    if (candleCache[key] && Date.now() - (candleCacheAt[key] || 0) < CANDLE_TTL) return Promise.resolve(candleCache[key]);
+    return fetchKlines(symbol, interval).then(function (raw) {
+      candleCache[key] = buildCandleModel(raw);
+      candleCacheAt[key] = Date.now();
+      return candleCache[key];
+    });
+  }
+
+  function load() {
+    if (typeof LightweightCharts === 'undefined') {
+      setStatus(t('status.lib'), true);
+      return;
+    }
+    if (!priceChart) initCharts();
+    document.getElementById('dashboard').classList.add('is-loading');
+    setStatus(t('status.loading', { s: state.symbol, tf: state.interval }));
+    Promise.all([loadCandles(state.symbol, state.interval), loadFunding(state.symbol)]).then(function (res) {
+      document.getElementById('dashboard').classList.remove('is-loading');
+      applyModel(res[0]);
+    }).catch(function (err) {
+      document.getElementById('dashboard').classList.remove('is-loading');
+      setStatus(t('status.failed', { msg: err.message }), true);
+    });
+  }
+
+  var scanSort = { mine: { key: 'ret', dir: -1 }, all: { key: 'edge', dir: -1 } };
+  var SORT_KEYS_MINE = { ret: 'th.netReturn', win: 'th.winRate', trades: 'th.trades', dd: 'th.maxDD', edge: 'th.edge' };
+  var SORT_KEYS_ALL = { ret: 'th.avgReturn', edge: 'th.avgEdge', win: 'th.avgWin', dd: 'th.worstDD', trades: 'th.totalTrades' };
+
+  function sortArrow(mode, key) {
+    if (scanSort[mode].key !== key) return '';
+    return scanSort[mode].dir < 0 ? ' ▾' : ' ▴';
+  }
+
+  function scanHead(mode) {
+    if (mode === 'compare') return '';
+    if (mode === 'mine') {
+      return '<tr><th>#</th><th>' + t('th.coin') + '</th><th>' + t('th.tf') + '</th>'
+        + '<th data-sort="ret">' + t('th.netReturn') + sortArrow('mine', 'ret') + '</th>'
+        + '<th data-sort="win">' + t('th.winRate') + sortArrow('mine', 'win') + '</th>'
+        + '<th data-sort="trades">' + t('th.trades') + sortArrow('mine', 'trades') + '</th>'
+        + '<th data-sort="dd">' + t('th.maxDD') + sortArrow('mine', 'dd') + '</th>'
+        + '<th data-sort="edge">' + t('th.edge') + sortArrow('mine', 'edge') + '</th></tr>';
+    }
+    return '<tr><th>' + t('th.indicator') + '</th>'
+      + '<th data-sort="ret">' + t('th.avgReturn') + sortArrow('all', 'ret') + '</th>'
+      + '<th data-sort="edge">' + t('th.avgEdge') + sortArrow('all', 'edge') + '</th>'
+      + '<th data-sort="win">' + t('th.avgWin') + sortArrow('all', 'win') + '</th>'
+      + '<th data-sort="dd">' + t('th.worstDD') + sortArrow('all', 'dd') + '</th>'
+      + '<th data-sort="trades">' + t('th.totalTrades') + sortArrow('all', 'trades') + '</th></tr>';
+  }
+
+  var TFS = ['1h', '4h', '1d'];
+
+  function selectButton(groupId, attr, val) {
+    var buttons = document.getElementById(groupId).querySelectorAll('button');
+    for (var i = 0; i < buttons.length; i++) {
+      buttons[i].classList.toggle('active', buttons[i].getAttribute(attr) === val);
+    }
+  }
+
+  var scanMode = 'mine';
+  var compareCharts = [];
+
+  function renderLiveStrip() {
+    var strip = document.getElementById('liveStrip');
+    if (!strip) return;
+    strip.innerHTML = '<div class="live-chip"><span class="live-dot flat"></span>' + t('live.loading') + '</div>';
+    Promise.all(COINS.map(function (sym) {
+      return loadCandles(sym, state.interval).then(function () {
+        return loadFunding(sym);
+      }).then(function () {
+        return { symbol: sym, candles: candleCache[sym + '_' + state.interval].candles };
+      });
+    })).then(function (coins) {
+      var h = '';
+      coins.forEach(function (coin) {
+        var model = buildStackModel(coin.candles, makeCtx(coin.symbol), state.indicators);
+        var stats = backtest(coin.candles, applyExitMods(coin.candles, model.events), model.stopSeries || state.stop);
+        var n = coin.candles.length;
+        var idxOf = {};
+        for (var k = 0; k < n; k++) idxOf[coin.candles[k].time] = k;
+        var last = stats.tradeEvents.length ? stats.tradeEvents[stats.tradeEvents.length - 1] : null;
+        var base = '<strong>' + coin.symbol.replace('USDT', '') + '</strong> ';
+        if (stats.open && last) {
+          var bi = idxOf[last.time];
+          h += '<div class="live-chip"><span class="live-dot long"></span>' + base + t('live.long') + ' · ' + (bi === n - 1 ? t('live.pending') : t('live.buyAgo', { n: n - 1 - bi })) + '</div>';
+        } else if (last) {
+          var si = idxOf[last.time];
+          var lbl = last.stopped ? t('live.stopAgo', { n: n - 1 - si }) : (si === n - 1 ? t('live.pending') : t('live.sellAgo', { n: n - 1 - si }));
+          h += '<div class="live-chip"><span class="live-dot flat"></span>' + base + t('live.flat') + ' · ' + lbl + '</div>';
+        } else {
+          h += '<div class="live-chip"><span class="live-dot flat"></span>' + base + t('live.flat') + ' · ' + t('live.noSignal') + '</div>';
+        }
+      });
+      strip.innerHTML = h;
+    }).catch(function () {
+      strip.innerHTML = '<div class="live-chip">' + t('live.failed') + '</div>';
+    });
+  }
+  function exitBadgeText() {
+    var parts = [];
+    if (state.regimeFilter) parts.push(t('exit.filter'));
+    if (state.quickExit) parts.push(t('exit.quick'));
+    return parts.length ? ' · ' + parts.join(' + ') : '';
+  }
+
+  var scanRunning = false;
+
+  function runScan() {
+    if (scanRunning) return;
+    scanRunning = true;
+    var head = document.getElementById('scanHead');
+    var body = document.getElementById('scanBody');
+    var note = document.getElementById('scanNote');
+    var config = document.getElementById('scanConfig');
+    note.className = 'scan-note';
+    head.innerHTML = scanHead(scanMode);
+    var stopTxt = stopDescText();
+    var cols = scanMode === 'mine' ? 8 : 6;
+    var tableEl = document.getElementById('scanTable');
+    var gridEl = document.getElementById('compareGrid');
+
+    if (scanMode === 'compare') {
+      tableEl.style.display = 'none';
+      gridEl.style.display = '';
+      config.textContent = t('scan.configCompare', { name: stackLabel(state.indicators), tf: state.interval.toUpperCase(), stop: stopTxt }) + exitBadgeText();
+      var coinsC = [];
+      var jobsC = COINS.map(function (sym) {
+        return loadCandles(sym, state.interval).then(function (m) {
+          return loadFunding(sym).then(function () { return { symbol: sym, model: m }; });
+        });
+      });
+      Promise.all(jobsC).then(function (coins) {
+        scanRunning = false;
+        coinsC = coins;
+        if (compareCharts.length) {
+          compareCharts.forEach(function (c) { c.remove(); });
+          compareCharts = [];
+        }
+        var th = theme();
+        var h = '';
+        coins.forEach(function (coin, i) {
+          var model = buildStackModel(coin.model.candles, makeCtx(coin.symbol), state.indicators);
+          var s = backtest(coin.model.candles, applyExitMods(coin.model.candles, model.events), model.stopSeries || state.stop);
+          h += '<div class="compare-cell" data-symbol="' + coin.symbol + '">'
+            + '<h4>' + coin.symbol.replace('USDT', '') + (s.closed ? ' <span class="' + (s.strategyRet >= 0 ? 'pos' : 'neg') + '">' + fmtPct1(s.strategyRet) + '</span><span>· ' + s.winRate.toFixed(0) + '% · ' + s.closed + '</span>' : ' <span>' + t('compare.noTrades') + '</span>') + '</h4>'
+            + '<div class="cmp-chart" id="cmpChart' + i + '"></div>'
+            + '</div>';
+          coin.__stats = s;
+        });
+        gridEl.innerHTML = h;
+        coins.forEach(function (coin, i) {
+          var c = LightweightCharts.createChart(document.getElementById('cmpChart' + i), {
+            autoSize: true,
+            layout: { background: { color: 'transparent' }, textColor: th.text, fontSize: 10 },
+            grid: { vertLines: { visible: false }, horzLines: { color: th.grid } },
+            timeScale: { visible: false },
+            rightPriceScale: { borderVisible: false },
+            crosshair: { mode: 0 },
+            handleScale: false,
+            handleScroll: false
+          });
+          var line = c.addLineSeries({ color: th.up, lineWidth: 1, priceLineVisible: false, lastValueVisible: false });
+          line.setData(coin.model.candles.map(function (k) { return { time: k.time, value: k.close }; }));
+          line.setMarkers(toMarkers(coin.__stats.tradeEvents).slice(-40));
+          compareCharts.push(c);
+        });
+        note.textContent = t('scan.noteCompare', { tf: state.interval.toUpperCase(), bars: BAR_COUNT });
+      }).catch(function (err) {
+        scanRunning = false;
+        note.textContent = t('scan.failed', { msg: err.message });
+        note.className = 'scan-note neg';
+      });
+      return;
+    }
+    tableEl.style.display = '';
+    gridEl.style.display = 'none';
+
+    if (scanMode === 'mine') {
+      var keys = state.indicators.slice();
+      var adaptive = keys.length > 1 && keys.indexOf('risk') >= 0;
+      var stopLabel = adaptive ? t('stop.adaptive') : stopTxt;
+      config.textContent = t('scan.configMine', { name: stackLabel(keys), stop: stopLabel, c: COINS.length, tfs: TFS.map(function (x) { return x.toUpperCase(); }).join(' / ') }) + exitBadgeText();
+      body.innerHTML = '<tr><td colspan="' + cols + '" style="text-align:center;color:var(--muted)">' + t('scan.scanning', { n: COINS.length * TFS.length }) + '</td></tr>';
+      if (keys.length === 1 && INDICATORS[keys[0]].noBacktest) {
+        body.innerHTML = '<tr><td colspan="' + cols + '" style="text-align:center;color:var(--muted)">' + t('scan.riskMsg', { name: INDICATORS[keys[0]].name }) + '</td></tr>';
+        note.textContent = t('scan.riskNote');
+        scanRunning = false;
+        return;
+      }
+      var jobs = [];
+      COINS.forEach(function (sym) {
+        TFS.forEach(function (tf) {
+          jobs.push(loadCandles(sym, tf).then(function (m) {
+            return { symbol: sym, tf: tf, model: m };
+          }).catch(function () { return null; }));
+        });
+      });
+      Promise.all([Promise.all(jobs), Promise.all(COINS.map(function (s) { return loadFunding(s); }))]).then(function (all) {
+        scanRunning = false;
+        var ok = all[0].filter(function (r) { return r !== null; });
+        if (!ok.length) {
+          body.innerHTML = '<tr><td colspan="' + cols + '" style="text-align:center;color:var(--muted)">' + t('scan.noData') + '</td></tr>';
+          return;
+        }
+        var rows = ok.map(function (r) {
+          var model = buildStackModel(r.model.candles, makeCtx(r.symbol), keys);
+          var s = backtest(r.model.candles, applyExitMods(r.model.candles, model.events), model.stopSeries || state.stop);
+          return { symbol: r.symbol, tf: r.tf, s: s };
+        });
+        var sortKey = scanSort.mine.key, sortDir = scanSort.mine.dir;
+        var pickMine = { ret: function (r) { return r.s.strategyRet; }, win: function (r) { return r.s.winRate; }, trades: function (r) { return r.s.closed; }, dd: function (r) { return r.s.maxDD; }, edge: function (r) { return r.s.strategyRet - r.s.holdRet; } };
+        rows.sort(function (a, b) { return (pickMine[sortKey](a) - pickMine[sortKey](b)) * sortDir; });
+        var h = '';
+        rows.forEach(function (r, i) {
+          var s = r.s;
+          var edge = s.strategyRet - s.holdRet;
+          h += '<tr data-symbol="' + r.symbol + '" data-tf="' + r.tf + '"' + (i < 3 ? ' class="heat-top"' : '') + '>'
+            + '<td>' + (i + 1) + '</td>'
+            + '<td><strong>' + r.symbol.replace('USDT', '') + '</strong></td>'
+            + '<td>' + r.tf.toUpperCase() + '</td>'
+            + '<td class="' + (s.strategyRet >= 0 ? 'pos' : 'neg') + '"><strong>' + (s.closed ? fmtPct(s.strategyRet) : '—') + '</strong></td>'
+            + '<td>' + (s.closed ? s.winRate.toFixed(1) + '%' : '—') + '</td>'
+            + '<td>' + s.closed + (s.open ? ' +1 open' : '') + '</td>'
+            + '<td class="neg">-' + s.maxDD.toFixed(1) + '%</td>'
+            + '<td class="' + (edge >= 0 ? 'pos' : 'neg') + '">' + fmtPct1(edge) + '</td>'
+            + '</tr>';
+        });
+        body.innerHTML = h;
+        if (rows.some(function (r) { return r.s.closed > 0; })) {
+          note.textContent = t('scan.noteMine', { name: stackLabel(keys), rows: rows.length, total: COINS.length * TFS.length, bars: BAR_COUNT, stop: stopLabel });
+        } else {
+          note.textContent = t('scan.emptyStack', { bars: BAR_COUNT });
+        }
+      });
+    } else {
+      var indKeys = Object.keys(INDICATORS).filter(function (k) { return !INDICATORS[k].noBacktest; });
+      config.textContent = t('scan.configAll', { tf: state.interval.toUpperCase(), stop: stopTxt, c: COINS.length }) + exitBadgeText();
+      body.innerHTML = '<tr><td colspan="' + cols + '" style="text-align:center;color:var(--muted)">' + t('scan.scanning', { n: indKeys.length * COINS.length }) + '</td></tr>';
+      var coinJobs = COINS.map(function (sym) {
+        return loadCandles(sym, state.interval).then(function (m) {
+          return { symbol: sym, model: m };
+        });
+      });
+      Promise.all([Promise.all(coinJobs), Promise.all(COINS.map(function (s) { return loadFunding(s); }))]).then(function (all) {
+        scanRunning = false;
+        var coins = all[0];
+        var byInd = {};
+        indKeys.forEach(function (ikey) {
+          byInd[ikey] = [];
+          coins.forEach(function (coin) {
+            var def = INDICATORS[ikey];
+            var model = def.compute(coin.model.candles, makeCtx(coin.symbol));
+            byInd[ikey].push(backtest(coin.model.candles, applyExitMods(coin.model.candles, model.events), state.stop));
+          });
+        });
+        var leaders = indKeys.map(function (ikey) {
+          var list = byInd[ikey];
+          var avg = function (f) { return list.reduce(function (a, s) { return a + f(s); }, 0) / list.length; };
+          return {
+            ind: ikey,
+            avgRet: avg(function (s) { return s.strategyRet; }),
+            avgEdge: avg(function (s) { return s.strategyRet - s.holdRet; }),
+            avgWin: avg(function (s) { return s.closed ? s.winRate : 0; }),
+            worstDD: Math.max.apply(null, list.map(function (s) { return s.maxDD; })),
+            totalTrades: list.reduce(function (a, s) { return a + s.closed; }, 0)
+          };
+        });
+        var sortKeyA = scanSort.all.key, sortDirA = scanSort.all.dir;
+        var pickAll = { ret: function (l) { return l.avgRet; }, edge: function (l) { return l.avgEdge; }, win: function (l) { return l.avgWin; }, dd: function (l) { return l.worstDD; }, trades: function (l) { return l.totalTrades; } };
+        leaders.sort(function (a, b) { return (pickAll[sortKeyA](a) - pickAll[sortKeyA](b)) * sortDirA; });
+        var h = '';
+        leaders.forEach(function (l) {
+          h += '<tr>'
+            + '<td><strong>' + INDICATORS[l.ind].name + '</strong></td>'
+            + '<td class="' + (l.avgRet >= 0 ? 'pos' : 'neg') + '">' + fmtPct(l.avgRet) + '</td>'
+            + '<td class="' + (l.avgEdge >= 0 ? 'pos' : 'neg') + '">' + fmtPct1(l.avgEdge) + '</td>'
+            + '<td>' + (l.totalTrades ? l.avgWin.toFixed(1) + '%' : '—') + '</td>'
+            + '<td class="neg">-' + l.worstDD.toFixed(1) + '%</td>'
+            + '<td>' + l.totalTrades + '</td>'
+            + '</tr>';
+        });
+        body.innerHTML = h;
+        note.textContent = t('scan.noteAll', { tf: state.interval.toUpperCase(), stop: stopTxt, bars: BAR_COUNT, m: COINS.length });
+      }).catch(function (err) {
+        scanRunning = false;
+        note.textContent = t('scan.failed', { msg: err.message });
+        note.className = 'scan-note neg';
+      });
+    }
+  }
+
+  function setTheme(key) {
+    if (!THEMES[key]) return;
+    state.theme = key;
+    document.documentElement.setAttribute('data-theme', key);
+    try { localStorage.setItem('qs-theme', key); } catch (e) {}
+    var dots = document.querySelectorAll('#themePicker .t-dot');
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].classList.toggle('active', dots[i].getAttribute('data-theme') === key);
+    }
+    if (priceChart) {
+      priceChart.applyOptions(chartOptions());
+      indChart.applyOptions(chartOptions());
+      eqChart.applyOptions(chartOptions());
+      var cached = candleCache[currentKey()];
+      if (cached) applyModel(cached);
+      runScan();
+    }
+  }
+
+  function bindGroup(groupId, attr, onPick) {
+    var group = document.getElementById(groupId);
+    group.addEventListener('click', function (e) {
+      var btn = e.target.closest('button');
+      if (!btn || !btn.hasAttribute(attr)) return;
+      var buttons = group.querySelectorAll('button');
+      for (var i = 0; i < buttons.length; i++) buttons[i].classList.remove('active');
+      btn.classList.add('active');
+      onPick(btn.getAttribute(attr));
+    });
+  }
+
+  bindGroup('symbolGroup', 'data-symbol', function (v) { state.symbol = v; syncHash(); load(); });
+  bindGroup('intervalGroup', 'data-interval', function (v) { state.interval = v; syncHash(); load(); runScan(); renderLiveStrip(); });
+  document.getElementById('indicatorGroup').addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (!btn || !btn.hasAttribute('data-indicator')) return;
+    var key = btn.getAttribute('data-indicator');
+    var idx = state.indicators.indexOf(key);
+    if (idx >= 0) {
+      if (state.indicators.length === 1) return;
+      state.indicators.splice(idx, 1);
+      btn.classList.remove('active');
+    } else {
+      state.indicators.push(key);
+      btn.classList.add('active');
+    }
+    syncHash();
+    var cached = candleCache[currentKey()];
+    if (cached) applyModel(cached);
+    runScan();
+    renderLiveStrip();
+  });
+  bindGroup('stopGroup', 'data-stop', function (v) {
+    state.stop = +v;
+    syncHash();
+    var cached = candleCache[currentKey()];
+    if (cached) applyModel(cached);
+    runScan();
+  });
+  document.getElementById('exitGroup').addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (!btn || !btn.hasAttribute('data-exit')) return;
+    var key = btn.getAttribute('data-exit');
+    if (key === 'filter') state.regimeFilter = !state.regimeFilter;
+    else state.quickExit = !state.quickExit;
+    btn.classList.toggle('active');
+    syncHash();
+    var cached = candleCache[currentKey()];
+    if (cached) applyModel(cached);
+    runScan();
+    renderLiveStrip();
+  });
+  document.getElementById('shareBtn').addEventListener('click', function () {
+    syncHash();
+    var btn = this;
+    var done = function () {
+      var old = btn.textContent;
+      btn.textContent = t('share.copied');
+      setTimeout(function () { btn.textContent = t('ctrl.share'); }, 1500);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(location.href).then(done, done);
+    } else { done(); }
+  });
+  document.getElementById('themePicker').addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (btn) setTheme(btn.getAttribute('data-theme'));
+  });
+  document.getElementById('scanModeGroup').addEventListener('click', function (e) {
+    var btn = e.target.closest('button');
+    if (!btn || !btn.hasAttribute('data-mode') || btn.getAttribute('data-mode') === scanMode) return;
+    scanMode = btn.getAttribute('data-mode');
+    selectButton('scanModeGroup', 'data-mode', scanMode);
+    runScan();
+  });
+  document.getElementById('scanBody').addEventListener('click', function (e) {
+    var tr = e.target.closest('tr');    if (!tr || !tr.hasAttribute('data-symbol')) return;
+    state.symbol = tr.getAttribute('data-symbol');
+    state.interval = tr.getAttribute('data-tf');
+    selectButton('symbolGroup', 'data-symbol', state.symbol);
+    selectButton('intervalGroup', 'data-interval', state.interval);
+    syncHash();
+    load();
+    document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' });
+  });
+  document.getElementById('scanHead').addEventListener('click', function (e) {
+    var th = e.target.closest('th[data-sort]');
+    if (!th) return;
+    var mode = scanMode === 'mine' ? 'mine' : 'all';
+    var key = th.getAttribute('data-sort');
+    if (scanSort[mode].key === key) scanSort[mode].dir *= -1;
+    else scanSort[mode] = { key: key, dir: -1 };
+    runScan();
+  });
+  document.getElementById('compareGrid').addEventListener('click', function (e) {
+    var cell = e.target.closest('.compare-cell');
+    if (!cell || !cell.hasAttribute('data-symbol')) return;
+    state.symbol = cell.getAttribute('data-symbol');
+    selectButton('symbolGroup', 'data-symbol', state.symbol);
+    syncHash();
+    load();
+    document.getElementById('dashboard').scrollIntoView({ behavior: 'smooth' });
+  });
+
+  document.getElementById('langToggle').addEventListener('click', function () {
+    state.lang = state.lang === 'zh' ? 'en' : 'zh';
+    try { localStorage.setItem('qs-lang', state.lang); } catch (e) {}
+    applyI18n();
+    var cached = candleCache[currentKey()];
+    if (cached) applyModel(cached);
+    runScan();
+    renderLiveStrip();
+  });
+
+  applyHash();
+  syncButtonsFromState();
+  syncHash();
+  setTheme(state.theme);
+  applyI18n();
+  load();
+  runScan();
+  renderLiveStrip();
+})();
+</script>
+</body>
+</html>

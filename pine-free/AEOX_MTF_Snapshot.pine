@@ -1,0 +1,111 @@
+//@version=5
+// ============================================================================
+//  AEOX MTF Snapshot v1 (Free — Educational)
+//
+//  WHAT THIS TEACHES
+//  "Daily as the war, 4h as the battle." Multi-timeframe confirmation should
+//  not require flipping between six charts. This script shows, in ONE table,
+//  the state of four fixed timeframes on the current symbol:
+//    - RSI(4)   : the AEOX public dip/stretch gauge (fixed rule)
+//    - Trend    : close vs SMA(100) — "is this timeframe in an uptrend?"
+//
+//  THE REPAINT-PROOF PATTERN (the part most MTF scripts get wrong)
+//  Every higher-timeframe value below is requested as
+//      request.security(..., expr[1], lookahead=barmerge.lookahead_on)
+//  This is the standard "confirmed HTF bar" idiom: it returns the value of
+//  the LAST CLOSED higher-timeframe bar, never the forming one. Without it,
+//  MTF panels silently repaint — the exact trap that makes MTF indicators
+//  "look perfect after the move". See also: AEOX Signal Confirm (free).
+//
+//  TIMEFRAMES ARE FIXED (15m / 1H / 4H / 1D) ON PURPOSE:
+//  fewer knobs = fewer ways to curve-fit. This is a teaching tool.
+//
+//  NOTE ON CHART TIMEFRAME: request.security() is designed for requesting
+//  timeframes HIGHER than or equal to the chart's. Use this panel on chart
+//  timeframes of 15m or lower for all four rows to be meaningful; the 15m
+//  row on a higher-TF chart returns the last 15m bar inside that chart bar,
+//  which is NOT the live 15m state.
+//
+//  Educational tool, not financial advice.
+//
+//  LICENSE: free for personal use. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX MTF Snapshot v1 (Free)", overlay=true)
+
+posInput = input.string("Bottom right", "Panel position", group="Display",
+     options=["Top left", "Top center", "Top right", "Middle left", "Middle center",
+              "Middle right", "Bottom left", "Bottom center", "Bottom right"])
+
+f_pos(s) =>
+    s == "Top left" ? position.top_left :
+       s == "Top center" ? position.top_center :
+       s == "Top right" ? position.top_right :
+       s == "Middle left" ? position.middle_left :
+       s == "Middle center" ? position.middle_center :
+       s == "Middle right" ? position.middle_right :
+       s == "Bottom left" ? position.bottom_left :
+       s == "Bottom center" ? position.bottom_center :
+       position.bottom_right
+
+// ---- confirmed HTF requests: expr[1] + lookahead_on = never repaints ----
+// RSI(4) and SMA(100) are fixed — same public teaching rule as the Primers.
+rsi15 = request.security(syminfo.tickerid, "15",  ta.rsi(close, 4)[1],  lookahead=barmerge.lookahead_on)
+up15  = request.security(syminfo.tickerid, "15",  close[1] > ta.sma(close, 100)[1], lookahead=barmerge.lookahead_on)
+rsi60 = request.security(syminfo.tickerid, "60",  ta.rsi(close, 4)[1],  lookahead=barmerge.lookahead_on)
+up60  = request.security(syminfo.tickerid, "60",  close[1] > ta.sma(close, 100)[1], lookahead=barmerge.lookahead_on)
+rsiH4 = request.security(syminfo.tickerid, "240", ta.rsi(close, 4)[1],  lookahead=barmerge.lookahead_on)
+upH4  = request.security(syminfo.tickerid, "240", close[1] > ta.sma(close, 100)[1], lookahead=barmerge.lookahead_on)
+rsiD  = request.security(syminfo.tickerid, "D",   ta.rsi(close, 4)[1],  lookahead=barmerge.lookahead_on)
+upD   = request.security(syminfo.tickerid, "D",   close[1] > ta.sma(close, 100)[1], lookahead=barmerge.lookahead_on)
+
+// fixed oversold / overbought thresholds (same numbers as Signal Confirm)
+OS_LEVEL = 10
+OB_LEVEL = 70
+
+f_rsiColor(r) => r < OS_LEVEL ? color.new(color.green, 60) : r > OB_LEVEL ? color.new(color.red, 60) : color.new(color.gray, 90)
+
+var table t = table.new(f_pos(posInput), 3, 5, bgcolor=color.new(color.black, 75), border_width=1, border_color=color.new(color.gray, 70))
+
+if barstate.islast
+    // header
+    table.cell(t, 0, 0, "TF",     text_color=color.white, text_size=size.small)
+    table.cell(t, 1, 0, "RSI(4)", text_color=color.white, text_size=size.small)
+    table.cell(t, 2, 0, "Trend",  text_color=color.white, text_size=size.small)
+
+    // one row per fixed timeframe; "n/a" guards symbols/timeframes without data
+    table.cell(t, 0, 1, "15m", text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 1, na(rsi15) ? "n/a" : str.tostring(rsi15, "#.#"), bgcolor=f_rsiColor(rsi15), text_color=color.white, text_size=size.small)
+    table.cell(t, 2, 1, na(up15) ? "n/a" : up15 ? "UP" : "DOWN", text_color=na(up15) ? color.gray : up15 ? color.green : color.red, text_size=size.small)
+
+    table.cell(t, 0, 2, "1H", text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 2, na(rsi60) ? "n/a" : str.tostring(rsi60, "#.#"), bgcolor=f_rsiColor(rsi60), text_color=color.white, text_size=size.small)
+    table.cell(t, 2, 2, na(up60) ? "n/a" : up60 ? "UP" : "DOWN", text_color=na(up60) ? color.gray : up60 ? color.green : color.red, text_size=size.small)
+
+    table.cell(t, 0, 3, "4H", text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 3, na(rsiH4) ? "n/a" : str.tostring(rsiH4, "#.#"), bgcolor=f_rsiColor(rsiH4), text_color=color.white, text_size=size.small)
+    table.cell(t, 2, 3, na(upH4) ? "n/a" : upH4 ? "UP" : "DOWN", text_color=na(upH4) ? color.gray : upH4 ? color.green : color.red, text_size=size.small)
+
+    table.cell(t, 0, 4, "1D", text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 4, na(rsiD) ? "n/a" : str.tostring(rsiD, "#.#"), bgcolor=f_rsiColor(rsiD), text_color=color.white, text_size=size.small)
+    table.cell(t, 2, 4, na(upD) ? "n/a" : upD ? "UP" : "DOWN", text_color=na(upD) ? color.gray : upD ? color.green : color.red, text_size=size.small)
+
+// ============================================================================
+//  WHEN THIS TOOL MISLEADS
+//  - The panel shows STATE (is a timeframe stretched? trending?), not signals.
+//    A green RSI(4) cell is a dip in an uptrend ONLY when the Trend cell of
+//    the same row says UP — context first, entry second.
+//  - Higher-timeframe values update once per HTF bar close. On a 15m chart
+//    the 1D row changes once a day; that lag is the price of no repaint.
+//  - No stops, no sizing, no alerts — risk engineering is Premium territory.
+//
+//  VERIFY IT YOURSELF
+//  Cross-check multi-timeframe states against the free web dashboard
+//  (independent implementation, fee-inclusive honest backtests):
+//    → quant.aeox.uk
+//  More free resources (guides, primers, bundles):
+//    → go.aeox.uk
+//
+//  Educational tool, not financial advice.
+//  (c) 2026 AEOX · free for personal use, no redistribution or resale.
+// ============================================================================

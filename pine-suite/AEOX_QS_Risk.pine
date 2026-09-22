@@ -1,0 +1,29 @@
+//@version=5
+// ============================================================================
+//  AEOX Quant — QS Risk v1 (Premium Suite)
+//  Stop-loss engineering: suggested stop distance = 2×ATR(14) as a % of
+//  price, clamped to 2–12%. Your stop breathes with the market instead of
+//  sitting at a fixed target: too tight gets whipsawed, too wide wastes
+//  risk budget.
+//  Parity: identical to https://quant.aeox.uk (simple 14-bar TR average).
+//
+//  LICENSE: personal use, one TradingView account. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX QS Risk v1", overlay=false)
+
+grpA = "Parameters"
+atrLen  = input.int(14, "ATR length", minval=1, group=grpA)
+atrMult = input.float(2.0, "ATR multiplier", minval=0.5, step=0.25, group=grpA)
+loCap   = input.float(2.0, "Minimum stop %", minval=0.5, group=grpA)
+hiCap   = input.float(12.0, "Maximum stop %", minval=3, maxval=50, group=grpA)
+
+// simple average of True Range (matches the web dashboard, not Wilder's RMA)
+stopPct = math.max(loCap, math.min(hiCap, ta.sma(ta.tr(true), atrLen) * atrMult / close * 100))
+
+stopColor = stopPct > 8 ? color.new(color.red, 20) : stopPct < 3 ? color.new(color.green, 20) : color.new(color.orange, 20)
+plot(stopPct, "Suggested stop %", color=stopColor, linewidth=2)
+hline(5, "Reference 5%", color=color.new(color.gray, 50))
+hline(12, "Volatility cap", color=color.new(color.red, 50))
+
+alertcondition(ta.crossover(stopPct, 8), "Risk: volatility spiked", "AEOX QS Risk: {{ticker}} {{interval}} suggested stop widened above 8% — market is getting choppy, consider smaller size.")

@@ -1,0 +1,58 @@
+//@version=5
+// ============================================================================
+//  AEOX Quant — QS Flow v1 (Premium Suite)
+//  Order-flow pressure + volume expansion.
+//  BUY when buying pressure crosses above +20 on expanding volume (z > 0.5);
+//  SELL when it crosses below -20.
+//
+//  Parity note: the web dashboard reads real taker-buy volume from Binance
+//  klines. TradingView doesn't expose taker data, so this script uses the
+//  standard candle-anatomy pressure proxy: CLV = ((close-low)-(high-close))
+//  / (high-low). Signals are analogous, not tick-identical.
+//  Markers are position-aware (actual entries/exits, first signal wins) —
+//  matching the dashboard arrows.
+//
+//  LICENSE: personal use, one TradingView account. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX QS Flow v1", overlay=false)
+
+grpS = "Signal thresholds"
+upTh = input.float(20.0, "BUY: pressure crosses above", minval=1, maxval=99, group=grpS)
+dnTh = input.float(-20.0, "SELL: pressure crosses below", maxval=-1, minval=-99, group=grpS)
+volZ = input.float(0.5, "Volume expansion z-score required on entry", minval=0, step=0.1, group=grpS)
+
+// candle-anatomy buying pressure (0-1), same scale as taker-buy share
+clv    = high > low ? ((close - low) - (high - close)) / (high - low) : 0.5
+smooth = ta.ema(clv, 14)
+
+vAvg   = ta.sma(volume, 20)
+vSd    = ta.stdev(volume, 20)
+vz     = not na(vAvg) and not na(vSd) and vSd > 0 ? (volume - vAvg) / vSd : 0.0
+
+v    = math.max(-100.0, math.min(100.0, (smooth - 0.5) * 400))
+warm = not na(v) and not na(v[1])
+
+buySig  = warm and v > upTh and v[1] <= upTh and vz > volZ
+sellSig = warm and v < dnTh and v[1] >= dnTh
+
+// ---- position state: engine-matched events (first signal wins, redundant skipped) ----
+var int dir = 0
+
+exitSig  = sellSig and dir == 1
+if exitSig
+    dir := 0
+
+entrySig = buySig and dir == 0
+if entrySig
+    dir := 1
+
+plot(v, "Flow pressure", color=color.new(color.teal, 0), linewidth=2)
+hline(20, "Buy pressure", color=color.new(color.green, 40))
+hline(0, "Neutral", color=color.new(color.gray, 70))
+hline(-20, "Sell pressure", color=color.new(color.red, 40))
+plotshape(entrySig, "BUY", shape.triangleup, location.bottom, color.new(color.green, 0), size=size.tiny, text="BUY", textcolor=color.green)
+plotshape(exitSig, "SELL", shape.triangledown, location.top, color.new(color.red, 0), size=size.tiny, text="SELL", textcolor=color.red)
+
+alertcondition(entrySig, "Flow BUY", "AEOX QS Flow: BUY {{ticker}} {{interval}} @ {{close}}")
+alertcondition(exitSig, "Flow SELL", "AEOX QS Flow: SELL {{ticker}} {{interval}} @ {{close}}")

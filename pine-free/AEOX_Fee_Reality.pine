@@ -1,0 +1,89 @@
+//@version=5
+// ============================================================================
+//  AEOX Fee Reality v1 (Free — Educational)
+//
+//  WHAT THIS TEACHES
+//  TradingView's default backtest ignores fees unless you configure them, so
+//  beginners routinely discover strategies that "beat ETH by 32,240%" — and
+//  then wonder why live trading feels nothing like the tester. This script
+//  makes fee drag VISIBLE on any chart:
+//    1. It counts the signals a fixed public rule (RSI-4 dip in an uptrend)
+//       has generated on the visible history — a proxy for trade frequency.
+//    2. It plots the cumulative fee drag those trades would have cost at a
+//       FIXED 0.10% taker fee per side (0.20% round trip).
+//    3. It shows the fee-inclusive breakeven win rate for a 1:1 strategy.
+//
+//  THE LESSON: fees scale with FREQUENCY. The more a "system" trades, the
+//  more its equity curve silently bleeds. Any backtest without fees is a
+//  story, not a test.
+//
+//  THE FEE RATE IS A CONSTANT ON PURPOSE (0.10%/side ≈ Binance default
+//  taker fee). Different venues/VIP tiers differ — edit the constant in the
+//  code if you want, but understand it: this is a teaching assumption, not
+//  a live model. No slippage, no spread widening, no market impact — real
+//  trading costs are usually HIGHER than what is shown here.
+//
+//  Educational tool, not financial advice.
+//
+//  LICENSE: free for personal use. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX Fee Reality v1 (Free)", overlay=false)
+
+// ---- fixed assumptions (constants, not inputs — the point is clarity) ----
+FEE_SIDE = 0.001                    // 0.10% per side (taker)
+FEE_RT_PCT = 2 * FEE_SIDE * 100     // round-trip cost in %
+
+// ---- the same fixed public rule as the other free teaching scripts ----
+rsi     = ta.rsi(close, 4)
+trendUp = close > ta.sma(close, 100)
+entry   = trendUp and ta.crossunder(rsi, 10)   // the Primer BUY context
+
+tradeCount = ta.cum(entry)                     // no position state machine:
+                                               // we count EVENTS, not entries
+// cumulative fee drag, in % of one unit of notional per trade
+feeDrag = tradeCount * FEE_RT_PCT
+
+plot(feeDrag, "Cumulative fee drag (%)", color=color.new(color.orange, 0), linewidth=2)
+
+// fee-inclusive breakeven win rate for a 1:1 reward:risk strategy:
+// p·(+1R) − (1−p)·(1R) − fee = 0  →  p = (1 + fee) / 2
+breakevenWR = (100 + FEE_RT_PCT) / 2           // e.g. 0.20% round trip → 50.10%
+
+var table t = table.new(position.top_right, 2, 5, bgcolor=color.new(color.black, 75), border_width=1, border_color=color.new(color.gray, 70))
+
+if barstate.islast
+    table.cell(t, 0, 0, "AEOX Fee Reality", text_color=color.white, text_size=size.small)
+    table.cell(t, 1, 0, "", text_color=color.white, text_size=size.small)
+
+    table.cell(t, 0, 1, "Fee per side (fixed)", text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 1, str.tostring(FEE_SIDE * 100, "#.##") + "%", text_color=color.white, text_size=size.small)
+
+    table.cell(t, 0, 2, "Round trip", text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 2, str.tostring(FEE_RT_PCT, "#.##") + "%", text_color=color.white, text_size=size.small)
+
+    table.cell(t, 0, 3, "Signals counted (RSI-4 rule)", text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 3, str.tostring(tradeCount, "#"), text_color=color.white, text_size=size.small)
+
+    table.cell(t, 0, 4, "Breakeven win rate @ 1:1", text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 4, str.tostring(breakevenWR, "#.##") + "%", text_color=color.orange, text_size=size.small)
+
+// ============================================================================
+//  WHEN THIS TOOL MISLEADS
+//  - "Signals counted" is a frequency PROXY: the rule fires, but not every
+//    fire is a sensible trade. The count overstates trades for teaching.
+//  - Drag is expressed in % of notional per trade — it is NOT your account
+//    drawdown, and it ignores compounding, slippage and spread.
+//  - Real costs vary: maker/taker, VIP tiers, funding on perps. If a
+//    backtest does not state its fee assumption, treat it as fiction.
+//
+//  VERIFY IT YOURSELF
+//  The free web dashboard backtests the same public rules WITH fees included
+//  — the honest baseline this panel points at:
+//    → quant.aeox.uk
+//  More free resources (guides, primers, bundles):
+//    → go.aeox.uk
+//
+//  Educational tool, not financial advice.
+//  (c) 2026 AEOX · free for personal use, no redistribution or resale.
+// ============================================================================

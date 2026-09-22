@@ -1,0 +1,129 @@
+//@version=5
+// ============================================================================
+//  AEOX Multi-Symbol Radar v1 (Free — Educational)
+//
+//  WHAT THIS TEACHES
+//  TradingView's Pine Screener requires a paid plan — free-plan users end up
+//  flipping through charts one by one. This script is a mini in-chart radar:
+//  ONE table showing the state of up to 5 symbols on the CURRENT chart
+//  timeframe, using the same fixed public rule as the AEOX Primers:
+//    - Trend : close vs SMA(100)  → "UP" / "DOWN"
+//    - RSI(4): the dip/stretch gauge
+//    - State : "DIP"  = uptrend AND RSI(4) < 10  (the Primer BUY context)
+//              "EXT"  = RSI(4) > 70              (stretched)
+//              "—"    = nothing notable
+//
+//  THE RULE IS FIXED ON PURPOSE. This is a transparency/teaching tool and a
+//  free-plan convenience — it is NOT a market scanner product. For full
+//  market scans use the free web dashboard at quant.aeox.uk.
+//
+//  DATA NOTE (read this): values are requested with request.security() on
+//  the chart's timeframe and update live during the forming bar. A "DIP"
+//  cell appearing intrabar is PROVISIONAL — it can vanish before the close
+//  (see the free AEOX Signal Confirm script for the confirmed-bar pattern).
+//  Treat the table as "what is happening now", not "what has confirmed".
+//
+//  Educational tool, not financial advice.
+//
+//  LICENSE: free for personal use. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX Multi-Symbol Radar v1 (Free)", overlay=true)
+
+sym1 = input.symbol("BINANCE:BTCUSDT", "Symbol 1", group="Symbols")
+sym2 = input.symbol("BINANCE:ETHUSDT", "Symbol 2", group="Symbols")
+sym3 = input.symbol("BINANCE:SOLUSDT", "Symbol 3", group="Symbols")
+sym4 = input.symbol("BINANCE:BNBUSDT", "Symbol 4", group="Symbols")
+sym5 = input.symbol("BINANCE:XRPUSDT", "Symbol 5", group="Symbols")
+
+posInput = input.string("Top right", "Panel position", group="Display",
+     options=["Top left", "Top center", "Top right", "Middle left", "Middle center",
+              "Middle right", "Bottom left", "Bottom center", "Bottom right"])
+
+f_pos(s) =>
+    s == "Top left" ? position.top_left :
+       s == "Top center" ? position.top_center :
+       s == "Top right" ? position.top_right :
+       s == "Middle left" ? position.middle_left :
+       s == "Middle center" ? position.middle_center :
+       s == "Middle right" ? position.middle_right :
+       s == "Bottom left" ? position.bottom_left :
+       s == "Bottom center" ? position.bottom_center :
+       position.bottom_right
+
+// ---- one tuple request per symbol: price, SMA(100), RSI(4) — all fixed ----
+[px1, ma1, r41] = request.security(sym1, timeframe.period, [close, ta.sma(close, 100), ta.rsi(close, 4)])
+[px2, ma2, r42] = request.security(sym2, timeframe.period, [close, ta.sma(close, 100), ta.rsi(close, 4)])
+[px3, ma3, r43] = request.security(sym3, timeframe.period, [close, ta.sma(close, 100), ta.rsi(close, 4)])
+[px4, ma4, r44] = request.security(sym4, timeframe.period, [close, ta.sma(close, 100), ta.rsi(close, 4)])
+[px5, ma5, r45] = request.security(sym5, timeframe.period, [close, ta.sma(close, 100), ta.rsi(close, 4)])
+
+OS_LEVEL = 10   // fixed thresholds, same as the other free teaching scripts
+OB_LEVEL = 70
+
+// fixed public rule → cell state
+f_state(up, r) => na(up) or na(r) ? "n/a" : up and r < OS_LEVEL ? "DIP" : r > OB_LEVEL ? "EXT" : "—"
+f_stateColor(st) => st == "DIP" ? color.green : st == "EXT" ? color.red : color.gray
+
+var table t = table.new(f_pos(posInput), 4, 6, bgcolor=color.new(color.black, 75), border_width=1, border_color=color.new(color.gray, 70))
+
+if barstate.islast
+    table.cell(t, 0, 0, "Symbol", text_color=color.white, text_size=size.small)
+    table.cell(t, 1, 0, "Trend",  text_color=color.white, text_size=size.small)
+    table.cell(t, 2, 0, "RSI(4)", text_color=color.white, text_size=size.small)
+    table.cell(t, 3, 0, "State",  text_color=color.white, text_size=size.small)
+
+    // rows written explicitly (5 symbols × 4 cells) — clearer for teaching
+    up1 = not na(px1) and not na(ma1) and px1 > ma1
+    st1 = f_state(up1, r41)
+    table.cell(t, 0, 1, str.replace(sym1, "BINANCE:", ""), text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 1, na(px1) ? "n/a" : up1 ? "UP" : "DOWN", text_color=na(px1) ? color.gray : up1 ? color.green : color.red, text_size=size.small)
+    table.cell(t, 2, 1, na(r41) ? "n/a" : str.tostring(r41, "#.#"), text_color=color.white, text_size=size.small)
+    table.cell(t, 3, 1, st1, text_color=f_stateColor(st1), text_size=size.small)
+
+    up2 = not na(px2) and not na(ma2) and px2 > ma2
+    st2 = f_state(up2, r42)
+    table.cell(t, 0, 2, str.replace(sym2, "BINANCE:", ""), text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 2, na(px2) ? "n/a" : up2 ? "UP" : "DOWN", text_color=na(px2) ? color.gray : up2 ? color.green : color.red, text_size=size.small)
+    table.cell(t, 2, 2, na(r42) ? "n/a" : str.tostring(r42, "#.#"), text_color=color.white, text_size=size.small)
+    table.cell(t, 3, 2, st2, text_color=f_stateColor(st2), text_size=size.small)
+
+    up3 = not na(px3) and not na(ma3) and px3 > ma3
+    st3 = f_state(up3, r43)
+    table.cell(t, 0, 3, str.replace(sym3, "BINANCE:", ""), text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 3, na(px3) ? "n/a" : up3 ? "UP" : "DOWN", text_color=na(px3) ? color.gray : up3 ? color.green : color.red, text_size=size.small)
+    table.cell(t, 2, 3, na(r43) ? "n/a" : str.tostring(r43, "#.#"), text_color=color.white, text_size=size.small)
+    table.cell(t, 3, 3, st3, text_color=f_stateColor(st3), text_size=size.small)
+
+    up4 = not na(px4) and not na(ma4) and px4 > ma4
+    st4 = f_state(up4, r44)
+    table.cell(t, 0, 4, str.replace(sym4, "BINANCE:", ""), text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 4, na(px4) ? "n/a" : up4 ? "UP" : "DOWN", text_color=na(px4) ? color.gray : up4 ? color.green : color.red, text_size=size.small)
+    table.cell(t, 2, 4, na(r44) ? "n/a" : str.tostring(r44, "#.#"), text_color=color.white, text_size=size.small)
+    table.cell(t, 3, 4, st4, text_color=f_stateColor(st4), text_size=size.small)
+
+    up5 = not na(px5) and not na(ma5) and px5 > ma5
+    st5 = f_state(up5, r45)
+    table.cell(t, 0, 5, str.replace(sym5, "BINANCE:", ""), text_color=color.silver, text_size=size.small)
+    table.cell(t, 1, 5, na(px5) ? "n/a" : up5 ? "UP" : "DOWN", text_color=na(px5) ? color.gray : up5 ? color.green : color.red, text_size=size.small)
+    table.cell(t, 2, 5, na(r45) ? "n/a" : str.tostring(r45, "#.#"), text_color=color.white, text_size=size.small)
+    table.cell(t, 3, 5, st5, text_color=f_stateColor(st5), text_size=size.small)
+
+// ============================================================================
+//  WHEN THIS TOOL MISLEADS
+//  - State cells update intrabar and are provisional until the bar closes.
+//  - A "DIP" is a CONTEXT (dip inside an uptrend), not an entry signal, and
+//    definitely not a complete trade: no stop, no sizing, no exit logic.
+//  - request.security() on many symbols costs chart performance; 5 is the
+//    deliberate ceiling of the free teaching line.
+//
+//  VERIFY IT YOURSELF
+//  The free web dashboard runs the same public rules across the market with
+//  fee-inclusive honest backtests — use it to sanity-check what you see here:
+//    → quant.aeox.uk
+//  More free resources (guides, primers, bundles):
+//    → go.aeox.uk
+//
+//  Educational tool, not financial advice.
+//  (c) 2026 AEOX · free for personal use, no redistribution or resale.
+// ============================================================================

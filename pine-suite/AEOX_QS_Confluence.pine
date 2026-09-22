@@ -1,0 +1,66 @@
+//@version=5
+// ============================================================================
+//  AEOX Quant — QS Confluence v1 (Premium Suite)
+//  Multi-factor resonance score (0-100): RSI momentum + Bollinger position +
+//  EMA trend spread + funding sentiment (contrarian).
+//  BUY when the score crosses below 20; SELL when it crosses above 80.
+//
+//  Parity note: TradingView feeds don't expose funding rates, so the funding
+//  component stays neutral (50) — exactly matching quant.aeox.uk's
+//  funding-unavailable fallback mode. Same math, same thresholds.
+//  Markers are position-aware (actual entries/exits, first signal wins) —
+//  matching the dashboard arrows.
+//  Premium: fully adjustable weights.
+//
+//  LICENSE: personal use, one TradingView account. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX QS Confluence v1", overlay=false)
+
+grpW  = "Factor weights (premium, default = public version)"
+wRsi  = input.float(35.0, "RSI momentum", minval=0, maxval=100, group=grpW)
+wBb   = input.float(25.0, "Bollinger %B position", minval=0, maxval=100, group=grpW)
+wEma  = input.float(15.0, "EMA trend spread", minval=0, maxval=100, group=grpW)
+wFund = input.float(25.0, "Funding sentiment (neutral on TradingView)", minval=0, maxval=100, group=grpW)
+
+grpS  = "Signal thresholds"
+buyTh  = input.float(20.0, "BUY: score crosses below", minval=1, maxval=50, group=grpS)
+sellTh = input.float(80.0, "SELL: score crosses above", minval=50, maxval=99, group=grpS)
+
+rsi14 = ta.rsi(close, 14)
+mid   = ta.sma(close, 20)
+sd    = ta.stdev(close, 20)
+e20   = ta.ema(close, 20)
+e50   = ta.ema(close, 50)
+
+bandW = 4 * sd
+pctb  = bandW > 0 ? (close - (mid - 2 * sd)) / bandW * 100 : 50.0
+emaC  = math.max(-100.0, math.min(100.0, (e20 - e50) / e50 * 5000))
+fundC = 50.0  // TradingView has no funding series — neutral, same as the dashboard fallback
+
+score = wRsi / 100 * rsi14 + wBb / 100 * pctb + wEma / 100 * emaC + wFund / 100 * fundC
+warm  = not na(score) and not na(score[1])
+
+buySig  = warm and score < buyTh and score[1] >= buyTh
+sellSig = warm and score > sellTh and score[1] <= sellTh
+
+// ---- position state: engine-matched events (first signal wins, redundant skipped) ----
+var int dir = 0
+
+exitSig  = sellSig and dir == 1
+if exitSig
+    dir := 0
+
+entrySig = buySig and dir == 0
+if entrySig
+    dir := 1
+
+plot(score, "Confluence score", color=color.new(color.teal, 0), linewidth=2)
+hline(80, "Overbought", color=color.new(color.red, 40))
+hline(50, "Mid", color=color.new(color.gray, 60))
+hline(20, "Oversold", color=color.new(color.green, 40))
+plotshape(entrySig, "BUY", shape.triangleup, location.bottom, color.new(color.green, 0), size=size.tiny, text="BUY", textcolor=color.green)
+plotshape(exitSig, "SELL", shape.triangledown, location.top, color.new(color.red, 0), size=size.tiny, text="SELL", textcolor=color.red)
+
+alertcondition(entrySig, "Confluence BUY", "AEOX QS Confluence: BUY {{ticker}} {{interval}} @ {{close}}")
+alertcondition(exitSig, "Confluence SELL", "AEOX QS Confluence: SELL {{ticker}} {{interval}} @ {{close}}")

@@ -1,0 +1,37 @@
+//@version=5
+// ============================================================================
+//  AEOX Quant — QS Regime v1 (Premium Suite)
+//  Trend-environment filter: EMA50 vs EMA200 spread scaled to ±100.
+//  Above +40 = established uptrend (trend-following friendly);
+//  below -40 = downtrend; in between = ranging (mean-reversion friendly).
+//  Parity: identical to https://quant.aeox.uk — same math, same thresholds.
+//
+//  LICENSE: personal use, one TradingView account. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX QS Regime v1", overlay=false)
+
+grpT = "Thresholds"
+upTh = input.float(40.0, "Uptrend above", minval=1, maxval=99, group=grpT)
+dnTh = input.float(-40.0, "Downtrend below", maxval=-1, minval=-99, group=grpT)
+
+e50  = ta.ema(close, 50)
+e200 = ta.ema(close, 200)
+
+v    = math.max(-100.0, math.min(100.0, (e50 - e200) / e200 * 3000))
+warm = not na(v) and not na(v[1])
+
+buySig  = warm and v > upTh and v[1] <= upTh
+sellSig = warm and v < dnTh and v[1] >= dnTh
+
+regimeColor = v > upTh ? color.new(color.green, 20) : v < dnTh ? color.new(color.red, 20) : color.new(color.gray, 40)
+plot(v, "Regime", color=regimeColor, linewidth=2)
+hline(40, "Uptrend", color=color.new(color.green, 40))
+hline(0, "Neutral", color=color.new(color.gray, 70))
+hline(-40, "Downtrend", color=color.new(color.red, 40))
+bgcolor(v > upTh ? color.new(color.green, 94) : v < dnTh ? color.new(color.red, 94) : na)
+plotshape(buySig, "Uptrend begins", shape.triangleup, location.bottom, color.new(color.green, 0), size=size.tiny, text="UP", textcolor=color.green)
+plotshape(sellSig, "Downtrend begins", shape.triangledown, location.top, color.new(color.red, 0), size=size.tiny, text="DOWN", textcolor=color.red)
+
+alertcondition(buySig, "Regime UP", "AEOX QS Regime: {{ticker}} {{interval}} entered an uptrend (> +{{plot_0}})")
+alertcondition(sellSig, "Regime DOWN", "AEOX QS Regime: {{ticker}} {{interval}} entered a downtrend")

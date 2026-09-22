@@ -1,0 +1,101 @@
+//@version=5
+// ============================================================================
+//  AEOX Signal Confirm v1 (Free — Educational)
+//
+//  WHAT THIS TEACHES
+//  "A signal isn't real 'til the candle closes."
+//  On a live bar, Pine evaluates your conditions on EVERY tick. A condition
+//  that is true at 14:32 can be false at 14:59 — the marker you saw mid-bar
+//  simply vanishes at close. That is why indicators "look perfect after the
+//  move but fall apart in live trading".
+//
+//  This script draws signals ONLY when the bar has closed and confirmed
+//  (barstate.isconfirmed). The optional "ghost" markers show the raw,
+//  unconfirmed signal on the live bar — turn them on and watch a ghost
+//  appear, flicker and disappear before the close. That flicker IS repaint,
+//  demonstrated on your own chart.
+//
+//  RULE USED (fixed, public teaching rule — same as the AEOX RSI-4 Primer):
+//    BUY  : price above SMA(100) (uptrend) AND RSI(4) crosses under 10
+//           → buying a dip inside an uptrend.
+//    SELL : RSI(4) crosses over 70.
+//  Thresholds 10 / 70 are fixed ON PURPOSE: this is a transparency teaching
+//  tool, not a tuneable trading system.
+//
+//  ALERT GUIDE (see P3 in our research): the single alertcondition below only
+//  fires when the bar has CONFIRMED. Even if you create the alert with
+//  "Once per bar" instead of "Once per bar close", the barstate.isconfirmed
+//  guard ensures it fires at the close — so alerts match what you see on the
+//  chart, and match the strategy tester's bar-close model.
+//
+//  Educational tool, not financial advice.
+//
+//  LICENSE: free for personal use. No redistribution or resale.
+//  (c) 2026 AEOX · quant.aeox.uk
+// ============================================================================
+indicator("AEOX Signal Confirm v1 (Free)", overlay=true)
+
+// ---- classic parameters only (textbook-level inputs are allowed; the logic
+//      itself stays fixed — that is the point of the free teaching line) ----
+rsiLen = input.int(4,   "RSI length",  minval=1, group="Classic parameters")
+smaLen = input.int(100, "Trend SMA length", minval=1, group="Classic parameters")
+
+showGhost = input.bool(false, "Show provisional (unconfirmed) ghost signals",
+     group="Teaching", tooltip="Ghost x-marks appear and disappear while the live bar is still open. They exist to DEMONSTRATE intrabar flicker. They will never match a confirmed BUY/SELL unless the bar closes with the condition still true.")
+
+// Fixed thresholds — deliberately NOT inputs (free-line moat rule).
+OS_LEVEL = 10
+OB_LEVEL = 70
+
+// ---- calculations (identical shape to the RSI-4 Primer rule) ----
+rsi     = ta.rsi(close, rsiLen)
+trendUp = close > ta.sma(close, smaLen)   // "should we be long-biased at all?"
+
+// Raw conditions: these flicker on the live bar. On historical bars they are
+// already final (historical bars only ever evaluate once, at their close).
+buyRaw  = trendUp and ta.crossunder(rsi, OS_LEVEL)
+sellRaw = ta.crossover(rsi, OB_LEVEL)
+
+// Confirmed conditions: barstate.isconfirmed is TRUE only on the final tick
+// of the live bar (and always true on historical bars). The shape below is
+// therefore drawn only once the candle has actually closed.
+buyConf  = buyRaw  and barstate.isconfirmed
+sellConf = sellRaw and barstate.isconfirmed
+
+// ---- plotting: confirmed signals are solid; ghosts are grey x-marks ----
+plotshape(buyConf,  "BUY (confirmed)",  shape.triangleup,   location.belowbar,
+     color.new(color.green, 0), size=size.small, text="BUY",  textcolor=color.green)
+plotshape(sellConf, "SELL (confirmed)", shape.triangledown, location.abovebar,
+     color.new(color.red, 0),   size=size.small, text="SELL", textcolor=color.red)
+
+plotshape(showGhost and buyRaw  and not barstate.isconfirmed, "Provisional BUY (ghost)",
+     shape.xcross, location.belowbar, color.new(color.gray, 0), size=size.tiny)
+plotshape(showGhost and sellRaw and not barstate.isconfirmed, "Provisional SELL (ghost)",
+     shape.xcross, location.abovebar, color.new(color.gray, 0), size=size.tiny)
+
+// ---- the single allowed alert: confirmed BUY only ----
+// Create the alert on this condition; the isconfirmed guard makes the firing
+// time unambiguous (bar close), no matter which "trigger frequency" you pick.
+alertcondition(buyConf, "Confirmed BUY (fires on bar close)",
+     "AEOX Signal Confirm: confirmed BUY {{ticker}} {{interval}} @ {{close}}")
+
+// ============================================================================
+//  WHEN THIS TOOL MISLEADS (know the limits of the demo)
+//  - Confirmation removes intrabar flicker, but NOT lookahead bias: if you
+//    back-test a rule and then "improve" it until the equity curve looks
+//    good, you have curve-fitted, not confirmed.
+//  - Confirmed signals are always LATE by construction — you trade
+//    reliability for a fraction of the move. That trade-off is the lesson.
+//  - This script has no stops, no position tracking, no sizing. It marks
+//    educational events only. Risk engineering lives in the Premium Suite.
+//
+//  VERIFY IT YOURSELF
+//  Compare these signals with the free web dashboard (independent
+//  implementation, fee-inclusive honest backtests):
+//    → quant.aeox.uk
+//  More free resources (guides, primers, bundles):
+//    → go.aeox.uk
+//
+//  Educational tool, not financial advice.
+//  (c) 2026 AEOX · free for personal use, no redistribution or resale.
+// ============================================================================

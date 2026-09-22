@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { width: 1200px; height: 630px; overflow: hidden; font-family: 'Segoe UI', 'Manrope', -apple-system, sans-serif; }
+.cover {
+  width: 1200px; height: 630px; position: relative;
+  background: linear-gradient(135deg, #0d1f16 0%, #12291c 55%, #0d1f16 100%);
+  color: #eaf5ee; display: flex; flex-direction: column; justify-content: center; padding: 0 90px;
+}
+.grid-bg { position: absolute; inset: 0; background-image: linear-gradient(rgba(58,157,111,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(58,157,111,.07) 1px, transparent 1px); background-size: 60px 60px; }
+.candles { position: absolute; right: 60px; bottom: 70px; display: flex; align-items: flex-end; gap: 14px; height: 300px; }
+.candle { width: 26px; position: relative; border-radius: 3px; }
+.candle .body { width: 100%; border-radius: 3px; }
+.candle .wick { position: absolute; left: 50%; width: 3px; transform: translateX(-50%); border-radius: 2px; }
+.up { background: #3a9d6f; } .up .wick { background: #3a9d6f; }
+.down { background: #e5767c; } .down .wick { background: #e5767c; }
+.badge { display: inline-flex; align-items: center; gap: 10px; font-size: 24px; letter-spacing: 4px; color: #8fc7a8; text-transform: uppercase; margin-bottom: 28px; }
+.badge::before { content: ''; width: 44px; height: 3px; background: #3a9d6f; }
+h1 { font-size: 88px; font-weight: 800; letter-spacing: -1px; line-height: 1.05; margin-bottom: 14px; }
+h1 .accent { color: #58c98d; }
+.sub { font-size: 32px; color: #a9c9b6; line-height: 1.5; max-width: 640px; }
+.sub strong { color: #eaf5ee; font-weight: 700; }
+.tagline { margin-top: 44px; display: flex; gap: 16px; align-items: center; font-size: 24px; color: #7d9184; }
+.tagline .pill { padding: 8px 20px; border: 1.5px solid rgba(58,157,111,.55); border-radius: 999px; color: #8fc7a8; font-size: 21px; }
+.domain { position: absolute; top: 56px; right: 90px; font-size: 26px; color: #58c98d; font-weight: 700; letter-spacing: 1px; }
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="grid-bg"></div>
+  <div class="domain">quant.aeox.uk</div>
+  <div class="badge">AEOX Quant</div>
+  <h1>Crypto Indicators<br>You Can <span class="accent">Verify</span>.</h1>
+  <p class="sub"><strong>Lighthouse</strong> — 1H pullback scanner · <strong>QS Confluence</strong> — multi-factor resonance · plus classics, with honest stop-loss backtests.</p>
+  <div class="tagline"><span class="pill">View-source auditable</span><span class="pill">Stop-loss &amp; fees included</span><span class="pill">Free</span></div>
+  <div class="candles">
+    <div class="candle up" style="height:120px"><div class="wick" style="top:-14px;height:150px"></div><div class="body" style="height:100%;margin-top:26px"></div></div>
+    <div class="candle down" style="height:90px"><div class="wick" style="top:-10px;height:112px"></div><div class="body" style="height:100%;margin-top:20px"></div></div>
+    <div class="candle down" style="height:70px"><div class="wick" style="top:-8px;height:90px"></div><div class="body" style="height:100%;margin-top:16px"></div></div>
+    <div class="candle up" style="height:150px"><div class="wick" style="top:-16px;height:186px"></div><div class="body" style="height:100%;margin-top:32px"></div></div>
+    <div class="candle up" style="height:190px"><div class="wick" style="top:-20px;height:232px"></div><div class="body" style="height:100%;margin-top:38px"></div></div>
+    <div class="candle down" style="height:160px"><div class="wick" style="top:-14px;height:198px"></div><div class="body" style="height:100%;margin-top:32px"></div></div>
+    <div class="candle up" style="height:230px"><div class="wick" style="top:-24px;height:286px"></div><div class="body" style="height:100%;margin-top:48px"></div></div>
+    <div class="candle up" style="height:280px"><div class="wick" style="top:-28px;height:348px"></div><div class="body" style="height:100%;margin-top:56px"></div></div>
+  </div>
+</div>
+</body>
+</html>
